@@ -1,0 +1,21 @@
+# Configuration
+/.env.local
+
+# Composer
+/vendor/
+
+# Contao Manager
+/contao-manager/
+
+# Generated folders
+/assets/
+/files/
+/public/
+/system/*
+!/system/config/
+/system/config/localconfig.php
+# Custom templates should be committed – do NOT exclude /templates/
+/var/
+
+# Skip files
+/system/modules/*/.skip
