@@ -1,0 +1,49 @@
+{# velo_positions content element — 3 position cards #}
+{% extends '@Contao/content_element/_base.html.twig' %}
+
+{% block content %}
+<section class="vw-section">
+    <div class="vw-container">
+        {% if section_eyebrow or section_heading %}
+            <div class="vw-heading">
+                {% if section_eyebrow %}
+                    <span class="vw-eyebrow">{{ section_eyebrow }}</span>
+                {% endif %}
+                {% if section_heading %}
+                    <h2>{{ section_heading }}</h2>
+                {% endif %}
+                {% if section_lead %}
+                    <p class="vw-lead">{{ section_lead }}</p>
+                {% endif %}
+            </div>
+        {% endif %}
+
+        <div class="vw-cards-3">
+            {% for card in cards %}
+                <div class="vw-card">
+                    {% if card.icon %}
+                        <div class="vw-card__icon">
+                            <i data-lucide="{{ card.icon }}" width="32" height="32" aria-hidden="true"></i>
+                        </div>
+                    {% endif %}
+                    {% if card.eyebrow %}
+                        <span class="vw-eyebrow vw-card__eyebrow">{{ card.eyebrow }}</span>
+                    {% endif %}
+                    {% if card.title %}
+                        <h3>{{ card.title }}</h3>
+                    {% endif %}
+                    {% if card.body %}
+                        <p>{{ card.body }}</p>
+                    {% endif %}
+                    {% if card.href and card.link_label %}
+                        <a href="{{ card.href }}" class="vw-card__link">
+                            {{ card.link_label }}
+                            <i data-lucide="arrow-right" width="14" height="14" aria-hidden="true"></i>
+                        </a>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}

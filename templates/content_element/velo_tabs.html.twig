@@ -1,0 +1,49 @@
+{# velo_tabs content element — Themen page sticky tabs #}
+{% extends '@Contao/content_element/_base.html.twig' %}
+
+{% block content %}
+<div class="vw-container">
+    {% if tabs %}
+        <nav class="vw-tabs__nav" aria-label="Themen-Tabs" role="tablist">
+            {% for i, tab in tabs %}
+                <button class="vw-tabs__tab{% if loop.first %} active{% endif %}"
+                        role="tab"
+                        aria-selected="{{ loop.first ? 'true' : 'false' }}"
+                        aria-controls="tab-panel-{{ i }}"
+                        id="tab-btn-{{ i }}"
+                        data-tab="{{ i }}">
+                    {{ tab.label }}
+                </button>
+            {% endfor %}
+        </nav>
+
+        <div class="vw-tabs__panels">
+            {% for i, tab in tabs %}
+                <div class="vw-tabs__panel{% if loop.first %} active{% endif %}"
+                     role="tabpanel"
+                     id="tab-panel-{{ i }}"
+                     aria-labelledby="tab-btn-{{ i }}">
+                    {{ tab.content|raw }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>
+
+<script>
+(function () {
+    var tabs = document.querySelectorAll('.vw-tabs__tab');
+    var panels = document.querySelectorAll('.vw-tabs__panel');
+    tabs.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var idx = this.dataset.tab;
+            tabs.forEach(function (t) { t.classList.remove('active'); t.setAttribute('aria-selected','false'); });
+            panels.forEach(function (p) { p.classList.remove('active'); });
+            this.classList.add('active');
+            this.setAttribute('aria-selected', 'true');
+            document.getElementById('tab-panel-' + idx).classList.add('active');
+        });
+    });
+}());
+</script>
+{% endblock %}

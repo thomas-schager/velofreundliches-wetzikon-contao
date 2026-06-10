@@ -14,7 +14,7 @@ to the production web host. Keep it up to date whenever the local setup changes.
 
 ### Web host requirements
 - PHP >= 8.1 with extensions: `intl`, `dom`, `mbstring`, `gd` (or `imagick`), `pdo_mysql`, `zip`, `openssl`, `curl`
-- MySQL / MariaDB >= 5.5
+- **MariaDB** (recommended, tested locally with MariaDB 12.3) — MySQL 9.x is NOT compatible due to reserved keyword conflicts; use MariaDB or MySQL 8.4 LTS on the host
 - SSH access (strongly recommended)
 - A dedicated web root that can be pointed to the `public/` sub-folder
 - `composer` available on the host, OR the ability to upload a pre-built `vendor/` folder
@@ -32,7 +32,7 @@ composer create-project contao/managed-edition .
 ### Environment file
 Copy `.env` to `.env.local` and fill in your local database credentials:
 ```
-DATABASE_URL=mysql://user:password@127.0.0.1:3306/velowetzikon
+DATABASE_URL=mysql://user:password@127.0.0.1:3306/velowetzikon?serverVersion=mariadb-12.3.2
 APP_SECRET=<random 32+ char string>
 ```
 

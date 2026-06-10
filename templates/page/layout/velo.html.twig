@@ -1,0 +1,93 @@
+{# Velofreundliches Wetzikon — Page Layout with Slots #}
+{% extends '@Contao/page/layout.html.twig' %}
+
+{% block head %}
+    {{ parent() }}
+    {% add 'velo_fonts' to stylesheets %}
+        <link rel="stylesheet" href="{{ asset('files/themes/velo/css/fonts.css') }}">
+    {% endadd %}
+    {% add 'velo_colors' to stylesheets %}
+        <link rel="stylesheet" href="{{ asset('files/themes/velo/css/colors_and_type.css') }}">
+    {% endadd %}
+    {% add 'velo_site' to stylesheets %}
+        <link rel="stylesheet" href="{{ asset('files/themes/velo/css/site.css') }}">
+    {% endadd %}
+{% endblock %}
+
+{% block body_content %}
+    <header class="vw-nav">
+        {% slot header %}{% endslot %}
+    </header>
+
+    <main class="vw-main">
+        {% slot main %}{% endslot %}
+    </main>
+
+    <footer class="vw-footer">
+        {% slot footer %}{% endslot %}
+    </footer>
+{% endblock %}
+
+{% block end_of_body %}
+    {{ parent() }}
+
+    {# Global melde modal — available on every page, opened by nav CTA and melde strip #}
+    <div class="modal-overlay" id="modal-melde" role="dialog" aria-modal="true" aria-labelledby="modal-melde-title"
+         onclick="if(event.target===this)this.classList.remove('open')">
+        <div class="modal">
+            <div class="modal-left">
+                <button class="modal-close" type="button" aria-label="Modal schliessen"
+                        onclick="document.getElementById('modal-melde').classList.remove('open')">
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                        <line x1="1" y1="1" x2="13" y2="13" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+                        <line x1="13" y1="1" x2="1" y2="13" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+                    </svg>
+                </button>
+                <h2 class="modal-title" id="modal-melde-title">Stelle melden</h2>
+                <p style="font-size:14px; color:var(--color-text-muted); margin-bottom:var(--space-5);">
+                    Beschreiben Sie die gefährliche oder problematische Velostelle.
+                </p>
+                {{ insert_tag('form::1')|raw }}
+            </div>
+            <div class="modal-right" aria-hidden="true">
+                <div style="padding:var(--space-5);height:100%;display:flex;flex-direction:column;gap:var(--space-4);">
+                    <p style="font:600 14px var(--font-display);color:#000;margin:0;">Ihre Meldung</p>
+                    <p style="font:400 13px var(--font-body);color:var(--color-text-muted);">
+                        Eine Vorschau Ihrer Angaben erscheint hier während Sie das Formular ausfüllen.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# Lucide icons via CDN — inline SVG via lucide.createIcons() #}
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            if (typeof lucide !== 'undefined') { lucide.createIcons(); }
+
+            // Mobile nav toggle
+            var burger = document.querySelector('.nav-burger');
+            var nav    = document.querySelector('.navigation-main');
+            if (burger && nav) {
+                function closeNav() {
+                    nav.classList.remove('is-open');
+                    burger.setAttribute('aria-expanded', 'false');
+                }
+                burger.addEventListener('click', function () {
+                    var open = nav.classList.toggle('is-open');
+                    burger.setAttribute('aria-expanded', open ? 'true' : 'false');
+                });
+                document.addEventListener('keydown', function (e) {
+                    if (e.key === 'Escape') {
+                        closeNav();
+                        document.getElementById('modal-melde').classList.remove('open');
+                    }
+                });
+                document.addEventListener('click', function (e) {
+                    if (!nav.contains(e.target) && !burger.contains(e.target)) { closeNav(); }
+                });
+            }
+        });
+    </script>
+{% endblock %}

@@ -1,0 +1,34 @@
+{# Event upcoming item — .vw-event layout with date column #}
+<article class="vw-event">
+    <div class="vw-event__date">
+        <span class="vw-event__day">{{ date|date('d') }}</span>
+        <span class="vw-event__month">{{ date|date('M') }}</span>
+    </div>
+    <div class="vw-event__body">
+        <div class="vw-event__meta">
+            {% if time %}
+                <span class="vw-event__meta-item">
+                    <i data-lucide="clock" width="13" height="13" aria-hidden="true"></i>
+                    {{ time }}
+                </span>
+            {% endif %}
+            {% if location is defined and location %}
+                <span class="vw-event__meta-item">
+                    <i data-lucide="map-pin" width="13" height="13" aria-hidden="true"></i>
+                    {{ location }}
+                </span>
+            {% endif %}
+        </div>
+        <a href="{{ href|default('#') }}" class="vw-event__title">{{ title }}</a>
+    </div>
+    <div class="vw-event__actions">
+        <a href="{{ href|default('#') }}" class="vw-btn vw-btn--ghost vw-btn--sm">
+            Details
+            <i data-lucide="arrow-right" width="14" height="14" aria-hidden="true"></i>
+        </a>
+    </div>
+</article>
+
+{% if not hasReader %}
+    {% do add_schema_org(getSchemaOrgData.invoke()) %}
+{% endif %}

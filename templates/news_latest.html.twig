@@ -1,0 +1,28 @@
+{# News latest item — .vw-news__card layout #}
+<article class="vw-news__card">
+    {% if addImage %}
+        <div class="vw-news__img">
+            {{ include('@Contao/image.html.twig') }}
+        </div>
+    {% endif %}
+    <div class="vw-news__body">
+        <div class="vw-news__meta">
+            <time datetime="{{ datetime }}" class="vw-news__date">{{ date }}</time>
+            {% if archive.title is defined %}
+                <span class="vw-tag vw-tag--neutral">{{ archive.title }}</span>
+            {% endif %}
+        </div>
+        <a href="{{ link }}" class="vw-news__title">{{ headline }}</a>
+        {% if teaser %}
+            <p class="vw-news__teaser">{{ teaser|striptags }}</p>
+        {% endif %}
+        <a href="{{ link }}" class="vw-news__link">
+            Weiterlesen
+            <i data-lucide="arrow-right" width="14" height="14" aria-hidden="true"></i>
+        </a>
+    </div>
+</article>
+
+{% if not hasReader %}
+    {% do add_schema_org(getSchemaOrgData.invoke()) %}
+{% endif %}

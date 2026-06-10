@@ -1,0 +1,19 @@
+{# velo_callout — Twig variant of the standard text element #}
+{# Select this template in the element's Expert tab to render as a callout #}
+{% extends '@Contao/content_element/text.html.twig' %}
+
+{% block content %}
+<div class="vw-container">
+    <div class="vw-callout vw-callout--action" role="note">
+        <i data-lucide="alert-circle" width="20" height="20" aria-hidden="true" style="flex-shrink:0; margin-top:2px;"></i>
+        <div>
+            {% if headline.text is defined and headline.text %}
+                <strong style="display:block; font-family:var(--font-body); font-weight:600; font-size:15px; margin-bottom:4px;">
+                    {{ headline.text }}
+                </strong>
+            {% endif %}
+            {{ text|raw }}
+        </div>
+    </div>
+</div>
+{% endblock %}

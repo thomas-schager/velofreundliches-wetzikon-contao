@@ -1,0 +1,10 @@
+{# Breadcrumb override — adds vw-breadcrumb wrapper #}
+{% extends '@Contao/mod_breadcrumb.html.twig' %}
+
+{% block content %}
+<div class="vw-container">
+    <nav class="vw-breadcrumb" aria-label="Brotkrümelpfad">
+        {{ parent() }}
+    </nav>
+</div>
+{% endblock %}

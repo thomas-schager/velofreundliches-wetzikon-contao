@@ -1,0 +1,13 @@
+{# News list wrapper — adds .vw-news grid container #}
+{% extends '@Contao/block_unsearchable.html.twig' %}
+
+{% block content %}
+    {% if not articles %}
+        <p class="empty" style="color:var(--color-text-muted);">{{ empty }}</p>
+    {% else %}
+        <div class="vw-news">
+            {{ articles|join|raw }}
+        </div>
+        {{ pagination|default|raw }}
+    {% endif %}
+{% endblock %}

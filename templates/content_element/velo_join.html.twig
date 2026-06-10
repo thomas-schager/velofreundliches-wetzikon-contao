@@ -1,0 +1,42 @@
+{# velo_join content element — dark membership block #}
+{% extends '@Contao/content_element/_base.html.twig' %}
+{% set headline = {text: '', tagName: 'h2'} %}
+
+{% block content %}
+<section class="vw-join">
+    <div class="vw-join__inner">
+        <div class="vw-join__main">
+            {% if eyebrow %}
+                <span class="vw-eyebrow vw-eyebrow--accent">{{ eyebrow }}</span>
+            {% endif %}
+            {% if headline.text is defined and headline.text %}
+                <h2>{{ headline.text }}</h2>
+            {% endif %}
+            {% if text %}
+                <p>{{ text|striptags }}</p>
+            {% endif %}
+            <div class="vw-join__btns">
+                {% if btn_primary_label and btn_primary_href %}
+                    <a href="{{ btn_primary_href }}" class="vw-btn vw-btn--primary vw-btn--lg">
+                        {{ btn_primary_label }}
+                        <i data-lucide="arrow-right" width="16" height="16" aria-hidden="true"></i>
+                    </a>
+                {% endif %}
+                {% if btn_secondary_label and btn_secondary_href %}
+                    <a href="{{ btn_secondary_href }}" class="vw-btn vw-btn--ondark">
+                        {{ btn_secondary_label }}
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if benefits %}
+            <ul class="vw-check-list">
+                {% for benefit in benefits %}
+                    <li>{{ benefit }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

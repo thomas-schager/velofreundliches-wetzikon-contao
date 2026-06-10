@@ -1,0 +1,35 @@
+{# Velofreundliches Wetzikon — Navigation (standalone, used with Navigationsmenü module) #}
+<div class="vw-nav__inner">
+    <a href="{{ insert_tag('env::url') }}" class="vw-logo" aria-label="Velofreundliches Wetzikon — Startseite">
+        <span class="vw-logo__bar" aria-hidden="true"></span>
+        <span class="vw-logo__text">
+            <span class="vw-logo__top">velofreundliches</span>
+            <span class="vw-logo__bottom">WETZIKON</span>
+        </span>
+    </a>
+
+    <span class="vw-nav__spacer" aria-hidden="true"></span>
+
+    <button type="button" class="vw-btn vw-btn--primary vw-btn--sm vw-nav__cta"
+            onclick="document.getElementById('modal-melde').classList.add('open')"
+            aria-haspopup="dialog">
+        Stelle melden
+        <i data-lucide="map-pin" width="16" height="16" aria-hidden="true"></i>
+    </button>
+
+    <button class="nav-burger vw-burger" aria-haspopup="menu" aria-expanded="false" aria-label="Navigation öffnen">
+        <i data-lucide="menu" width="22" height="22" aria-hidden="true"></i>
+    </button>
+
+    <nav class="navigation-main vw-nav__links" aria-label="Hauptnavigation">
+        {{ items|raw }}
+        <li class="nav-cta-desktop">
+            <button type="button" class="vw-btn vw-btn--primary vw-btn--sm"
+                    onclick="document.getElementById('modal-melde').classList.add('open')"
+                    aria-haspopup="dialog">
+                Stelle melden
+                <i data-lucide="map-pin" width="16" height="16" aria-hidden="true"></i>
+            </button>
+        </li>
+    </nav>
+</div>

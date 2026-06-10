@@ -9,7 +9,6 @@
 
 # Generated folders
 /assets/
-/files/
 /public/
 /system/*
 !/system/config/
@@ -19,3 +18,11 @@
 
 # Skip files
 /system/modules/*/.skip
+
+# Exclude generated/uploaded files but keep theme assets
+/files/*
+!/files/themes/
+
+# OS and tooling
+.DS_Store
+.claude/

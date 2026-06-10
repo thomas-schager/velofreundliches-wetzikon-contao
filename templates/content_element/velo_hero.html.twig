@@ -1,0 +1,56 @@
+{# velo_hero content element #}
+{# Save headline text then clear it so the base wrapper does not render a duplicate #}
+{% extends '@Contao/content_element/_base.html.twig' %}
+{% set _hero_headline = headline.text %}
+{% set headline = {text: '', tagName: 'h1'} %}
+
+{% block content %}
+<section class="vw-hero vw-section">
+    <div class="vw-container">
+        <div class="vw-hero__grid">
+            <div class="vw-hero__content">
+                {% if eyebrow %}
+                    <span class="vw-eyebrow">{{ eyebrow }}</span>
+                {% endif %}
+
+                <h1 class="vw-hero__title">{{ _hero_headline }}</h1>
+
+                {% if lead %}
+                    <p class="vw-hero__lead">{{ lead }}</p>
+                {% endif %}
+
+                <div class="vw-hero__btns">
+                    {% if btn_primary_label and btn_primary_href %}
+                        <a href="{{ btn_primary_href }}" class="vw-btn vw-btn--primary vw-btn--lg">
+                            {{ btn_primary_label }}
+                            <i data-lucide="arrow-right" width="16" height="16" aria-hidden="true"></i>
+                        </a>
+                    {% endif %}
+                    {% if btn_secondary_label and btn_secondary_href %}
+                        <a href="{{ btn_secondary_href }}" class="vw-btn vw-btn--secondary vw-btn--lg">
+                            {{ btn_secondary_label }}
+                        </a>
+                    {% endif %}
+                </div>
+
+                {% if stats %}
+                    <div class="vw-hero__stats">
+                        {% for stat in stats %}
+                            <div>
+                                <div class="vw-hero__stat-value">{{ stat.value }}</div>
+                                <div class="vw-hero__stat-label">{{ stat.label }}</div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            {% if img_src %}
+                <figure class="vw-hero__img">
+                    <img src="{{ img_src }}" alt="{{ img_alt }}" loading="eager">
+                </figure>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}

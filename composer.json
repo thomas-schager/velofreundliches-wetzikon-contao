@@ -11,7 +11,8 @@
         "contao/listing-bundle": "^5.7",
         "contao/manager-bundle": "5.7.*",
         "contao/news-bundle": "^5.7",
-        "contao/newsletter-bundle": "^5.7"
+        "contao/newsletter-bundle": "^5.7",
+        "menatwork/contao-multicolumnwizard-bundle": "^3.6"
     },
     "conflict": {
         "contao-components/installer": "<1.3"
