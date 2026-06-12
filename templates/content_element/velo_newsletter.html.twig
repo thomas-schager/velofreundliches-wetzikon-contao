@@ -1,0 +1,35 @@
+{# velo_newsletter content element — dark newsletter signup block #}
+{% extends '@Contao/content_element/_base.html.twig' %}
+{% set _headline = headline.text %}
+{% set headline = {text: '', tagName: 'h2'} %}
+
+{% block content %}
+<section class="vw-newsletter">
+    <div class="vw-newsletter__inner">
+        <div class="vw-newsletter__main">
+            {% if eyebrow %}
+                <span class="vw-eyebrow vw-eyebrow--accent">{{ eyebrow }}</span>
+            {% endif %}
+            {% if _headline %}
+                <h2>{{ _headline }}</h2>
+            {% endif %}
+            {% if text %}
+                <p>{{ text|striptags }}</p>
+            {% endif %}
+            {% if form_id %}
+                <div class="vw-newsletter__form">
+                    {{ insert_tag('insert_form::' ~ form_id)|raw }}
+                </div>
+            {% endif %}
+        </div>
+
+        {% if topics %}
+            <ul class="vw-check-list">
+                {% for topic in topics %}
+                    <li>{{ topic }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

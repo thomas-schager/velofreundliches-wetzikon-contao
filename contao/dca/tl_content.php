@@ -32,6 +32,12 @@ $GLOBALS['TL_DCA']['tl_content']['palettes']['velo_join'] =
     '{benefits_legend},velo_benefits;'.
     '{invisible_legend:hide},invisible,start,stop';
 
+$GLOBALS['TL_DCA']['tl_content']['palettes']['velo_newsletter'] =
+    '{type_legend},type,headline;'.
+    '{newsletter_legend},velo_eyebrow,text,velo_form_id;'.
+    '{benefits_legend},velo_benefits;'.
+    '{invisible_legend:hide},invisible,start,stop';
+
 $GLOBALS['TL_DCA']['tl_content']['palettes']['velo_tabs'] =
     '{type_legend},type;'.
     '{tabs_legend},velo_tabs;'.
@@ -187,7 +193,7 @@ $GLOBALS['TL_DCA']['tl_content']['fields']['velo_cards'] = [
 // ============================================================
 
 $GLOBALS['TL_DCA']['tl_content']['fields']['velo_benefits'] = [
-    'label'     => ['Vorteile-Liste', 'Stichpunkte der Mitgliedschaftsvorteile'],
+    'label'     => ['Stichpunkte-Liste', 'Stichpunkte (Vorteile, Newsletter-Inhalte, etc.)'],
     'inputType' => 'multiColumnWizard',
     'eval'      => [
         'columnFields' => [
