@@ -21,6 +21,7 @@ class VeloHeroController extends AbstractContentElementController
         $this->addDefaultDataToTemplate($template, $model->row());
 
         $template->set('eyebrow', $model->velo_eyebrow);
+        $template->set('hero_title', $model->velo_hero_title);
         $template->set('lead', $model->velo_lead);
         $template->set('btn_primary_label', $model->velo_btn_primary_label);
         $template->set('btn_primary_href', $model->velo_btn_primary_href);

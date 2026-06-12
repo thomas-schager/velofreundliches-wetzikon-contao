@@ -7,8 +7,8 @@ declare(strict_types=1);
 // ============================================================
 
 $GLOBALS['TL_DCA']['tl_content']['palettes']['velo_hero'] =
-    '{type_legend},type,headline;'.
-    '{hero_legend},velo_eyebrow,velo_lead;'.
+    '{type_legend},type;'.
+    '{hero_legend},velo_eyebrow,velo_hero_title,velo_lead;'.
     '{buttons_legend},velo_btn_primary_label,velo_btn_primary_href,velo_btn_secondary_label,velo_btn_secondary_href;'.
     '{stats_legend},velo_stats;'.
     '{image_legend:hide},addImage;'.
@@ -92,6 +92,13 @@ $GLOBALS['TL_DCA']['tl_content']['fields']['velo_btn_secondary_href'] = [
 // ============================================================
 // velo_hero specific
 // ============================================================
+
+$GLOBALS['TL_DCA']['tl_content']['fields']['velo_hero_title'] = [
+    'label'     => ['H1-Titel (HTML erlaubt)', 'Titel der Seite. HTML-Tags wie <em> sind erlaubt.'],
+    'inputType' => 'text',
+    'eval'      => ['allowHtml' => true, 'maxlength' => 512, 'tl_class' => 'clr long'],
+    'sql'       => "varchar(512) NOT NULL default ''",
+];
 
 $GLOBALS['TL_DCA']['tl_content']['fields']['velo_stats'] = [
     'label'     => ['Statistiken', '3 Zahlen mit Beschriftung (z.B. «412 Mitglieder»)'],

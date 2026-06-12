@@ -1,7 +1,6 @@
 {# velo_hero content element #}
 {# Save headline text then clear it so the base wrapper does not render a duplicate #}
 {% extends '@Contao/content_element/_base.html.twig' %}
-{% set _hero_headline = headline.text %}
 {% set headline = {text: '', tagName: 'h1'} %}
 
 {% block content %}
@@ -13,7 +12,7 @@
                     <span class="vw-eyebrow">{{ eyebrow }}</span>
                 {% endif %}
 
-                <h1 class="vw-hero__title">{{ _hero_headline }}</h1>
+                <h1 class="vw-hero__title">{{ hero_title|raw }}</h1>
 
                 {% if lead %}
                     <p class="vw-hero__lead">{{ lead }}</p>
