@@ -1,0 +1,25 @@
+{% if level == 'level_1' %}
+    {% for item in items %}
+        {% set isTrail = 'trail' in item.class %}
+        <div class="vw-nav__item{% if item.isActive %} vw-nav__item--active{% elseif isTrail %} vw-nav__item--trail{% endif %}">
+            {% if item.subitems|default %}
+                <button class="vw-nav__trigger" type="button" aria-expanded="false" aria-haspopup="true">
+                    {{- item.link -}}
+                    <svg class="vw-nav__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </button>
+                <div class="vw-nav__panel" role="menu">
+                    {{- item.subitems|raw -}}
+                </div>
+            {% else %}
+                <a class="vw-nav__trigger{% if item.isActive %} vw-nav__trigger--active{% endif %}" href="{{ item.href }}">{{ item.link }}</a>
+            {% endif %}
+        </div>
+    {% endfor %}
+{% else %}
+    {% for item in items %}
+        <a class="vw-nav__suba" href="{{ item.href }}" role="menuitem"{% if item.isActive %} aria-current="page"{% endif %}>
+            <b>{{ item.link }}</b>
+            {% if item.nav_subtitle|default %}<span>{{ item.nav_subtitle }}</span>{% endif %}
+        </a>
+    {% endfor %}
+{% endif %}

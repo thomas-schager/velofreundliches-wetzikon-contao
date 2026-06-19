@@ -1,4 +1,4 @@
-{# Velofreundliches Wetzikon — Navigation (standalone, used with Navigationsmenü module) #}
+{# Velofreundliches Wetzikon — 2-level navigation with desktop dropdown + mobile drawer #}
 <div class="vw-nav__inner">
     <a href="{{ insert_tag('env::url') }}" class="vw-logo" aria-label="Velofreundliches Wetzikon — Startseite">
         <span class="vw-logo__bar" aria-hidden="true"></span>
@@ -8,28 +8,136 @@
         </span>
     </a>
 
+    {# Desktop nav — hidden on mobile, flex row on desktop #}
+    <nav class="vw-nav__links" aria-label="Hauptnavigation">
+        {{ items|raw }}
+    </nav>
+
     <span class="vw-nav__spacer" aria-hidden="true"></span>
 
+    {# Stelle melden CTA — hidden on mobile (in drawer), shown on desktop #}
     <button type="button" class="vw-btn vw-btn--primary vw-btn--sm vw-nav__cta"
             onclick="document.getElementById('modal-melde').classList.add('open')"
             aria-haspopup="dialog">
-        Stelle melden
         <i data-lucide="map-pin" width="16" height="16" aria-hidden="true"></i>
+        Stelle melden
     </button>
 
-    <button class="nav-burger vw-burger" aria-haspopup="menu" aria-expanded="false" aria-label="Navigation öffnen">
-        <i data-lucide="menu" width="22" height="22" aria-hidden="true"></i>
+    {# Mobile burger — hidden on desktop #}
+    <button class="vw-burger" id="vwBurger" type="button"
+            aria-label="Navigation öffnen" aria-expanded="false" aria-controls="vwDrawer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true">
+            <line x1="4" y1="7" x2="20" y2="7"></line>
+            <line x1="4" y1="12" x2="20" y2="12"></line>
+            <line x1="4" y1="17" x2="20" y2="17"></line>
+        </svg>
     </button>
-
-    <nav class="navigation-main vw-nav__links" aria-label="Hauptnavigation">
-        {{ items|raw }}
-        <li class="nav-cta-desktop">
-            <button type="button" class="vw-btn vw-btn--primary vw-btn--sm"
-                    onclick="document.getElementById('modal-melde').classList.add('open')"
-                    aria-haspopup="dialog">
-                Stelle melden
-                <i data-lucide="map-pin" width="16" height="16" aria-hidden="true"></i>
-            </button>
-        </li>
-    </nav>
 </div>
+
+{# Mobile drawer — slides in from right on mobile #}
+<div class="vw-drawer" id="vwDrawer" aria-hidden="true">
+    <div class="vw-drawer__scrim" data-drawer-close=""></div>
+    <div class="vw-drawer__panel" role="dialog" aria-modal="true" aria-label="Navigation">
+        <div class="vw-drawer__head">
+            <a href="{{ insert_tag('env::url') }}" class="vw-logo" aria-label="Startseite">
+                <span class="vw-logo__bar" aria-hidden="true"></span>
+                <span class="vw-logo__text">
+                    <span class="vw-logo__top">velofreundliches</span>
+                    <span class="vw-logo__bottom">WETZIKON</span>
+                </span>
+            </a>
+            <button class="vw-drawer__close" type="button" aria-label="Menü schliessen" data-drawer-close="">
+                <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true">
+                    <line x1="1" y1="1" x2="13" y2="13"></line>
+                    <line x1="13" y1="1" x2="1" y2="13"></line>
+                </svg>
+            </button>
+        </div>
+        <div class="vw-drawer__scroll">
+            {{ items|raw }}
+        </div>
+        <button type="button" class="vw-btn vw-btn--primary"
+                onclick="document.getElementById('modal-melde').classList.add('open'); (function(){var d=document.getElementById('vwDrawer'),b=document.getElementById('vwBurger');d.classList.remove('is-open');d.setAttribute('aria-hidden','true');b.setAttribute('aria-expanded','false');document.body.style.overflow='';})()"
+                aria-haspopup="dialog">
+            <i data-lucide="map-pin" width="16" height="16" aria-hidden="true"></i>
+            Stelle melden
+        </button>
+    </div>
+</div>
+
+<script>
+(function () {
+    'use strict';
+
+    /* ---- Desktop: click-to-toggle + close on outside click / Escape ---- */
+    var navLinks = document.querySelector('.vw-nav__links');
+    if (navLinks) {
+        var dItems = Array.prototype.slice.call(navLinks.querySelectorAll('.vw-nav__item'));
+        function dCloseAll() {
+            dItems.forEach(function (i) {
+                i.classList.remove('is-open');
+                var t = i.querySelector('.vw-nav__trigger');
+                if (t && t.tagName === 'BUTTON') t.setAttribute('aria-expanded', 'false');
+            });
+        }
+        dItems.forEach(function (item) {
+            var trigger = item.querySelector('.vw-nav__trigger');
+            if (!trigger || trigger.tagName !== 'BUTTON') return;
+            trigger.addEventListener('click', function () {
+                var open = item.classList.contains('is-open');
+                dCloseAll();
+                if (!open) { item.classList.add('is-open'); trigger.setAttribute('aria-expanded', 'true'); }
+            });
+        });
+        document.addEventListener('click', function (e) {
+            if (!e.target.closest('.vw-nav__links')) dCloseAll();
+        });
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') dCloseAll();
+        });
+    }
+
+    /* ---- Mobile drawer open/close ---- */
+    var drawer = document.getElementById('vwDrawer');
+    var burger = document.getElementById('vwBurger');
+    if (drawer && burger) {
+        function openDrawer() {
+            drawer.classList.add('is-open');
+            drawer.setAttribute('aria-hidden', 'false');
+            burger.setAttribute('aria-expanded', 'true');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeDrawer() {
+            drawer.classList.remove('is-open');
+            drawer.setAttribute('aria-hidden', 'true');
+            burger.setAttribute('aria-expanded', 'false');
+            document.body.style.overflow = '';
+        }
+        burger.addEventListener('click', openDrawer);
+        Array.prototype.slice.call(drawer.querySelectorAll('[data-drawer-close]')).forEach(function (el) {
+            el.addEventListener('click', closeDrawer);
+        });
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && drawer.classList.contains('is-open')) closeDrawer();
+        });
+    }
+
+    /* ---- Mobile accordion (single-open) ---- */
+    if (drawer) {
+        var mItems = Array.prototype.slice.call(drawer.querySelectorAll('.vw-nav__item'));
+        mItems.forEach(function (item) {
+            var trigger = item.querySelector('.vw-nav__trigger');
+            if (!trigger || trigger.tagName !== 'BUTTON') return;
+            trigger.addEventListener('click', function () {
+                var open = item.classList.contains('is-open');
+                mItems.forEach(function (a) {
+                    a.classList.remove('is-open');
+                    var t = a.querySelector('.vw-nav__trigger');
+                    if (t) t.setAttribute('aria-expanded', 'false');
+                });
+                if (!open) { item.classList.add('is-open'); trigger.setAttribute('aria-expanded', 'true'); }
+            });
+        });
+    }
+})();
+</script>

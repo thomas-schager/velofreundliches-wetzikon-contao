@@ -27,8 +27,9 @@
   align-items: center;
 }
 @media (min-width: 600px) { .vw-nav__inner { padding-inline: 32px; } }
+
 /* backdrop-filter on ::before so .vw-nav itself does not become a containing block
-   for position:fixed children (the mobile nav drawer needs viewport-relative fixed) */
+   for position:fixed children (the mobile drawer needs viewport-relative fixed) */
 .vw-nav::before {
   content: '';
   position: absolute;
@@ -59,13 +60,13 @@
 .vw-logo__top { font: 500 12px var(--font-display); color: #000; letter-spacing: 0.01em; }
 .vw-logo__bottom { font: 700 var(--text-sm) var(--font-display); color: #000; letter-spacing: 0.16em; }
 
-/* Spacer: pushes CTA + burger right on mobile, hidden on desktop */
+/* Spacer: pushes burger right on mobile; hidden on desktop (nav links take flex: 1) */
 .vw-nav__spacer { flex: 1; }
 @media (min-width: 960px) { .vw-nav__spacer { display: none; } }
 
-/* Mobile CTA: visible on mobile, hidden on desktop (desktop CTA is inside the nav) */
-.vw-nav__cta { flex-shrink: 0; }
-@media (min-width: 960px) { .vw-nav__cta { display: none; } }
+/* Stelle melden CTA: hidden on mobile (lives in drawer), shown on desktop */
+.vw-nav__cta { display: none; flex-shrink: 0; }
+@media (min-width: 960px) { .vw-nav__cta { display: inline-flex; } }
 
 /* Burger button */
 .vw-burger {
@@ -73,8 +74,8 @@
   align-items: center;
   justify-content: center;
   width: 44px; height: 44px;
-  background: transparent;
-  border: none;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   cursor: pointer;
   flex-shrink: 0;
   color: #000;
@@ -84,7 +85,7 @@
 .vw-burger:hover { background: var(--color-surface-2); }
 @media (min-width: 960px) { .vw-burger { display: none; } }
 
-/* Nav container — hidden on mobile, flex row on desktop */
+/* Desktop nav links — hidden on mobile, flex row on desktop */
 .vw-nav__links {
   display: none;
 }
@@ -95,98 +96,213 @@
     align-items: center;
     flex: 1;
     margin: 0; padding: 0;
-    gap: 0;
+    gap: 4px;
   }
 }
 
-/* Mobile drawer: JS adds .is-open when burger is clicked */
-.vw-nav__links.is-open {
+/* ---- Nav items (level_1): containers for trigger + dropdown panel ---- */
+.vw-nav__item {
+  position: relative;
+}
+
+/* Shared trigger (both <button> for parents with children, <a> for leaf pages) */
+.vw-nav__trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font: 500 15px var(--font-body);
+  color: #000;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  padding: 9px 14px;
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+.vw-nav__trigger:hover { background: var(--color-surface-2); text-decoration: none; }
+
+/* Chevron icon inside button triggers */
+.vw-nav__chev {
+  width: 15px; height: 15px;
+  color: var(--color-text-muted);
+  transition: transform var(--dur) var(--ease);
+  flex-shrink: 0;
+}
+
+/* Active / trail states */
+.vw-nav__item--active > .vw-nav__trigger,
+.vw-nav__item--trail > .vw-nav__trigger,
+.vw-nav__trigger--active { color: var(--color-primary); }
+
+/* Active underline bar and chevron rotation — desktop only */
+@media (min-width: 960px) {
+  .vw-nav__item--active > .vw-nav__trigger::after,
+  .vw-nav__item--trail > .vw-nav__trigger::after {
+    content: "";
+    position: absolute;
+    left: 14px; right: 14px; bottom: 2px;
+    height: 2px;
+    background: var(--color-primary);
+    border-radius: 2px;
+  }
+  .vw-nav__item:hover .vw-nav__chev,
+  .vw-nav__item.is-open .vw-nav__chev { transform: rotate(180deg); }
+}
+
+/* ---- Desktop dropdown panel ---- */
+.vw-nav__panel {
+  display: none;
+}
+@media (min-width: 960px) {
+  .vw-nav__panel {
+    display: block;
+    position: absolute;
+    top: calc(100% + 10px); left: 0;
+    min-width: 268px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    box-shadow: 0 2px 4px rgba(0,0,0,.04), 0 8px 24px rgba(0,0,0,.06);
+    padding: 8px;
+    opacity: 0; visibility: hidden; transform: translateY(-6px);
+    transition: opacity var(--dur) var(--ease), transform var(--dur) var(--ease), visibility var(--dur);
+    z-index: 50;
+  }
+  /* Caret arrow pointing up */
+  .vw-nav__panel::before {
+    content: "";
+    position: absolute; top: -5px; left: 22px;
+    width: 10px; height: 10px;
+    background: var(--color-surface);
+    border-left: 1px solid var(--color-border);
+    border-top: 1px solid var(--color-border);
+    transform: rotate(45deg);
+  }
+  /* Invisible bridge prevents dropdown closing on the hover gap */
+  .vw-nav__item::after {
+    content: ""; position: absolute; top: 100%; left: 0; right: 0; height: 12px;
+  }
+  .vw-nav__item:hover .vw-nav__panel,
+  .vw-nav__item:focus-within .vw-nav__panel,
+  .vw-nav__item.is-open .vw-nav__panel { opacity: 1; visibility: visible; transform: translateY(0); }
+}
+
+/* ---- Dropdown sub-links ---- */
+.vw-nav__suba {
   display: flex;
   flex-direction: column;
-  align-items: stretch;
-  position: fixed;
-  top: 64px;
-  left: 0; right: 0; bottom: 0;
+  gap: 1px;
+  padding: 11px 14px;
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  color: #000;
+  transition: background var(--dur) var(--ease);
+}
+.vw-nav__suba:hover { background: #fbe7df; text-decoration: none; }
+.vw-nav__suba b { font: 500 15px/1.25 var(--font-body); }
+.vw-nav__suba span { font-size: 12.5px; color: var(--color-text-muted); line-height: 1.35; margin-top: 2px; }
+.vw-nav__suba:hover b { color: var(--color-primary); }
+
+/* ---- Mobile drawer ---- */
+.vw-drawer {
+  position: fixed; inset: 0;
+  z-index: 200;
+  visibility: hidden;
+}
+.vw-drawer__scrim {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,0.4);
+  opacity: 0;
+  transition: opacity var(--dur) var(--ease);
+  cursor: pointer;
+}
+.vw-drawer__panel {
+  position: absolute; top: 0; right: 0;
+  height: 100%;
+  width: min(82vw, 360px);
   background: var(--color-surface);
-  z-index: 99;
-  padding: var(--space-5);
-  overflow-y: auto;
-  border-top: 1px solid var(--color-border);
-  gap: 0;
+  box-shadow: 0 2px 4px rgba(0,0,0,.04), 0 8px 24px rgba(0,0,0,.06);
+  padding: 16px 18px 24px;
+  transform: translateX(100%);
+  transition: transform 0.25s var(--ease);
+  display: flex; flex-direction: column;
 }
-/* On desktop, .is-open doesn't change anything — nav is always visible */
-@media (min-width: 960px) {
-  .vw-nav__links.is-open {
-    position: static;
-    background: transparent;
-    padding: 0;
-    border-top: none;
-    overflow: visible;
-    flex-direction: row;
-    align-items: center;
-    top: auto; left: auto; right: auto; bottom: auto;
-  }
+.vw-drawer.is-open { visibility: visible; }
+.vw-drawer.is-open .vw-drawer__scrim { opacity: 1; }
+.vw-drawer.is-open .vw-drawer__panel { transform: translateX(0); }
+.vw-drawer__head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 8px;
 }
+.vw-drawer__close {
+  width: 42px; height: 42px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: #555; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.vw-drawer__close svg { width: 18px; height: 18px; }
+.vw-drawer__scroll { overflow-y: auto; flex: 1; }
 
-/* level_1 list — mobile: vertical stack inside drawer; desktop: horizontal row */
-.vw-nav__links .level_1 {
-  display: flex;
-  flex-direction: column;
-  list-style: none;
-  margin: 0; padding: 0;
-  width: 100%;
-}
-@media (min-width: 960px) {
-  .vw-nav__links .level_1 {
-    flex-direction: row;
-    align-items: center;
-    gap: var(--space-6);
-    width: auto;
-    flex: 1;
-  }
-}
-
-/* Mobile: nav item borders and link sizing */
-.vw-nav__links .level_1 > li {
+/* In drawer: items become accordion rows */
+.vw-drawer .vw-nav__item {
   border-bottom: 1px solid var(--color-border);
 }
-@media (min-width: 960px) {
-  .vw-nav__links .level_1 > li { border-bottom: none; }
-}
-
-.vw-nav__links .level_1 > li > a,
-.vw-nav__links .level_1 > li > strong {
-  display: block;
-  padding: var(--space-4) 0;
-  font: 500 18px var(--font-body);
+.vw-drawer .vw-nav__trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  text-align: left;
+  font: 500 17px var(--font-body);
   color: #000;
-  text-decoration: none;
+  padding: 15px 4px;
+  border-radius: 0;
+  background: none;
+  white-space: normal;
 }
-@media (min-width: 960px) {
-  .vw-nav__links .level_1 > li > a,
-  .vw-nav__links .level_1 > li > strong {
-    padding: 0;
-    font-size: var(--text-sm);
-    transition: color var(--dur) var(--ease);
-  }
-  .vw-nav__links .level_1 > li > a:hover { text-decoration: underline; text-underline-offset: 5px; }
+.vw-drawer .vw-nav__trigger--active { color: var(--color-primary); }
+.vw-drawer .vw-nav__chev {
+  width: 20px; height: 20px;
+  flex-shrink: 0;
+  transition: transform var(--dur) var(--ease);
 }
+.vw-drawer .vw-nav__item.is-open .vw-nav__chev { transform: rotate(180deg); }
 
-.vw-nav__links .level_1 > li.active > a,
-.vw-nav__links .level_1 > li.active > strong,
-.vw-nav__links .level_1 > li.trail > a { color: var(--color-primary); }
-
-/* Desktop CTA inside nav — hidden on mobile, visible on desktop */
-.nav-cta-desktop { display: none; }
-@media (min-width: 960px) {
-  .nav-cta-desktop {
-    display: flex;
-    align-items: center;
-    list-style: none;
-    margin-left: auto;
-    padding: 0;
-  }
+/* Accordion panel in drawer (overrides desktop absolute positioning) */
+.vw-drawer .vw-nav__panel {
+  display: block;
+  position: static;
+  opacity: 1; visibility: visible; transform: none;
+  box-shadow: none; border: none; border-radius: 0; padding: 0;
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height 0.2s var(--ease);
 }
+.vw-drawer .vw-nav__item.is-open .vw-nav__panel { max-height: 320px; }
+
+/* Drawer sub-links: simpler list appearance, subtitle hidden */
+.vw-drawer .vw-nav__suba {
+  display: block;
+  padding: 11px 4px 11px 18px;
+  border-left: 2px solid var(--color-border);
+  border-radius: 0;
+  margin-left: 4px;
+  color: var(--color-text-muted);
+  font-size: 15px;
+  background: none;
+  transition: color var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+.vw-drawer .vw-nav__suba:last-child { margin-bottom: 8px; }
+.vw-drawer .vw-nav__suba:hover { color: var(--color-primary); border-color: var(--color-primary); background: none; }
+.vw-drawer .vw-nav__suba b { font-weight: inherit; font-size: inherit; }
+.vw-drawer .vw-nav__suba span { display: none; }
+
+.vw-drawer .vw-btn { margin-top: 18px; }
 
 /* ============================================================
    MAIN CONTENT AREA
