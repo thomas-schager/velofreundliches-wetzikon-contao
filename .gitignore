@@ -9,7 +9,8 @@
 
 # Generated folders
 /assets/
-/public/
+/public/*
+!/public/additions/
 /system/*
 !/system/config/
 /system/config/localconfig.php

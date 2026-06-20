@@ -1,0 +1,1595 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VeloMelde -- Feedback-Karte</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --vw-primary:        #ff5544;
+      --vw-primary-hover:  #e84a3a;
+      --vw-primary-press:  #d8412f;
+      --vw-primary-tint:   #ffece8;
+      --vw-dark:           #3a3a3a;
+      --vw-dark-hover:     #2a2a2a;
+      --vw-success:        #61ce70;
+      --vw-success-dark:   #3aa84a;
+      --vw-success-tint:   #e9f7eb;
+      --vw-bg:             #fafaf8;
+      --vw-surface:        #ffffff;
+      --vw-surface-2:      #f4f3ef;
+      --vw-border:         #e8e6e0;
+      --vw-border-strong:  #cfcdc6;
+      --vw-muted:          #6b6b67;
+      --vw-muted-strong:   #5e5e5a;
+      --vw-font-display:   'Jost', system-ui, sans-serif;
+      --vw-font-body:      'Roboto', system-ui, sans-serif;
+      --vw-ease:           cubic-bezier(.2,.7,.3,1);
+      --vw-dur:            180ms;
+      --vw-radius-sm:      4px;
+      --vw-radius-md:      8px;
+      --vw-radius-lg:      12px;
+      --vw-radius-full:    999px;
+      --vw-shadow-sm:      0 1px 2px rgba(0,0,0,0.04);
+      --vw-shadow-md:      0 1px 2px rgba(0,0,0,0.04), 0 2px 8px rgba(0,0,0,0.04);
+      --vw-shadow-lg:      0 2px 4px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.06);
+      /* Skala-Farben bleiben unverändert */
+      --c1: #b91c1c; --c2: #ea580c; --c3: #ca8a04; --c4: #65a30d; --c5: #15803d;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--vw-font-body);
+      font-size: 16px;
+      line-height: 1.6;
+      background: var(--vw-bg);
+      color: var(--vw-dark);
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* HEADER -- Nav-Stil: weiss, 1px Border, leichter Blur */
+    header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 0 24px;
+      height: 56px;
+      background: rgba(255,255,255,0.96);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--vw-border);
+      flex-shrink: 0;
+      box-shadow: var(--vw-shadow-sm);
+      position: relative;
+      z-index: 100;
+    }
+
+    /* Logo: 6px vertikaler Akzentbalken + Jost-Wortmarke */
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+    .logo-bar {
+      width: 6px;
+      height: 32px;
+      background: var(--vw-primary);
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+    .logo-text {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.1;
+    }
+    .logo-top {
+      font-family: var(--vw-font-display);
+      font-weight: 500;
+      font-size: 13px;
+      color: var(--vw-dark);
+      letter-spacing: 0;
+    }
+    .logo-bottom {
+      font-family: var(--vw-font-display);
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--vw-dark);
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    .tagline {
+      font-family: var(--vw-font-body);
+      font-size: 13px;
+      color: var(--vw-muted);
+      border-left: 1px solid var(--vw-border);
+      padding-left: 16px;
+      margin-left: 4px;
+    }
+
+    .header-stats {
+      margin-left: auto;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    .stat-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--vw-surface-2);
+      border: 1px solid var(--vw-border);
+      border-radius: var(--vw-radius-full);
+      padding: 3px 10px;
+      font-family: var(--vw-font-body);
+      font-size: 13px;
+      color: var(--vw-muted-strong);
+    }
+    .stat-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* LAYOUT */
+    .workspace { display: flex; flex: 1; overflow: hidden; }
+
+    /* MAP */
+    #map { flex: 1; cursor: crosshair !important; }
+
+    /* MODAL */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.55);
+      backdrop-filter: blur(3px);
+      -webkit-backdrop-filter: blur(3px);
+      z-index: 2000;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none;
+      transition: opacity var(--vw-dur) var(--vw-ease);
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+
+    /* ── MODAL LAYOUT ── */
+    .modal {
+      background: var(--vw-surface);
+      border: 1px solid var(--vw-border);
+      border-radius: var(--vw-radius-lg);
+      /* Mobile: full-width bottom sheet */
+      width: 100%;
+      max-width: 100vw;
+      box-sizing: border-box;
+      max-height: 92dvh;
+      transform: translateY(100%);
+      transition: transform var(--vw-dur) var(--vw-ease);
+      box-shadow: var(--vw-shadow-lg);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .modal-overlay { align-items: flex-end; }
+    .modal-overlay.open .modal { transform: translateY(0); }
+
+    /* Left column = scrollable form */
+    .modal-left {
+      flex: 1;
+      padding: 24px 20px 20px;
+      min-width: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* Map inline (mobile only) */
+    .modal-map-inline {
+      position: relative;
+      border-radius: var(--vw-radius-sm);
+      overflow: hidden;
+      border: 1px solid var(--vw-border);
+      margin-bottom: 0;
+      flex-shrink: 0;
+      height: 180px;
+      transition: border-color 180ms var(--vw-ease), box-shadow 180ms var(--vw-ease);
+    }
+    #preview-map-mobile { width: 100%; height: 100%; }
+
+    /* Right column: hidden on mobile */
+    .modal-right {
+      display: none;
+    }
+
+    /* ── TABLET PORTRAIT (≥ 600px) ── */
+    @media (min-width: 600px) {
+      .modal-overlay { align-items: center; }
+      .modal {
+        width: 520px;
+        max-width: 94vw;
+        max-height: 88dvh;
+        border-radius: var(--vw-radius-lg);
+        transform: translateY(12px);
+        flex-direction: column;
+      }
+      .modal-overlay.open .modal { transform: translateY(0); }
+      .modal-left { padding: 28px 28px 24px; }
+    }
+
+    /* ── DESKTOP (≥ 900px): two-column layout ── */
+    @media (min-width: 900px) {
+      .modal {
+        width: 820px;
+        max-width: 92vw;
+        flex-direction: row;
+      }
+      /* Hide the inline map, show the right column */
+      .modal-map-inline { display: none; }
+      .modal-right {
+        display: block;
+        flex: 0 0 340px;
+        position: relative;
+        border-left: 1px solid var(--vw-border);
+      }
+      #preview-map-desktop { width: 100%; height: 100%; min-height: 400px; }
+    }
+
+    /* Shared map chrome */
+    .preview-crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); pointer-events: none; z-index: 1000; }
+    .preview-label {
+      position: absolute; top: 8px; left: 8px; z-index: 1000;
+      background: var(--vw-surface); border: 1px solid var(--vw-border);
+      border-radius: var(--vw-radius-sm); padding: 3px 8px;
+      font-family: var(--vw-font-body); font-size: 12px; color: var(--vw-muted);
+      pointer-events: none;
+    }
+
+    /* Modal typography */
+    .modal-title {
+      font-family: var(--vw-font-display);
+      font-size: 20px; font-weight: 600;
+      color: var(--vw-dark);
+      margin-bottom: 4px;
+      letter-spacing: -0.01em;
+      line-height: 1.2;
+    }
+    .modal-coords {
+      font-family: var(--vw-font-body);
+      font-size: 12px; color: var(--vw-muted);
+      margin-bottom: 2px;
+    }
+    .modal-address {
+      font-size: 14px; color: var(--vw-dark);
+      font-weight: 500; min-height: 1.4em;
+      margin-bottom: 6px;
+      font-family: var(--vw-font-body);
+    }
+    .address-loading {
+      font-size: 13px; color: var(--vw-muted);
+      font-style: italic; font-weight: 400;
+    }
+
+        /* Field label -- eyebrow style */
+    .field-label {
+      display: block;
+      font-family: var(--vw-font-body);
+      font-size: 12px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      color: var(--vw-muted);
+      margin-bottom: 8px;
+    }
+    .field-label .required { color: var(--vw-primary); margin-left: 2px; }
+
+    /* RATING SCALE */
+    .rating-scale { display: flex; gap: 6px; margin-bottom: 6px; }
+    .rating-btn {
+      flex: 1 1 0;
+      min-width: 0;
+      display: flex; flex-direction: column; align-items: center;
+      border: none; background: transparent; cursor: pointer;
+      padding: 0 0 4px;
+      min-height: 44px;
+    }
+    .rating-btn .r-bar {
+      width: 100%; height: 36px;
+      border-radius: var(--vw-radius-sm);
+      outline: 3px solid transparent;
+      outline-offset: 2px;
+      transition: outline-color var(--vw-dur) var(--vw-ease);
+      flex-shrink: 0;
+    }
+    .rating-btn[data-r="1"] .r-bar { background: var(--c1); }
+    .rating-btn[data-r="2"] .r-bar { background: var(--c2); }
+    .rating-btn[data-r="3"] .r-bar { background: var(--c3); }
+    .rating-btn[data-r="4"] .r-bar { background: var(--c4); }
+    .rating-btn[data-r="5"] .r-bar { background: var(--c5); }
+    .rating-btn .r-label {
+      font-family: var(--vw-font-body); font-size: 12px; font-weight: 400;
+      color: var(--vw-muted); padding: 5px 2px 0;
+      text-align: center; line-height: 1.2;
+      transition: color var(--vw-dur) var(--vw-ease), font-weight var(--vw-dur);
+      width: 100%;
+      overflow: hidden;
+      word-break: break-word;
+      hyphens: auto;
+      lang: de;
+    }
+    .rating-btn:hover .r-label { color: var(--vw-dark); }
+    .rating-btn[data-r="1"].selected .r-bar { outline-color: var(--c1); }
+    .rating-btn[data-r="2"].selected .r-bar { outline-color: var(--c2); }
+    .rating-btn[data-r="3"].selected .r-bar { outline-color: var(--c3); }
+    .rating-btn[data-r="4"].selected .r-bar { outline-color: var(--c4); }
+    .rating-btn[data-r="5"].selected .r-bar { outline-color: var(--c5); }
+    .rating-btn[data-r="1"].selected .r-label { color: var(--c1); font-weight: 500; }
+    .rating-btn[data-r="2"].selected .r-label { color: var(--c2); font-weight: 500; }
+    .rating-btn[data-r="3"].selected .r-label { color: var(--c3); font-weight: 500; }
+    .rating-btn[data-r="4"].selected .r-label { color: var(--c4); font-weight: 500; }
+    .rating-btn[data-r="5"].selected .r-label { color: var(--c5); font-weight: 500; }
+
+    /* FIELDSET RESET */
+    .rating-fieldset { border: none; padding: 0; margin: 0; min-width: 0; }
+    .rating-fieldset .field-label { margin-bottom: 8px; }
+    .field-optional { font-weight: 400; text-transform: none; letter-spacing: 0; font-size: 13px; color: var(--vw-muted); }
+
+    /* VALIDATION */
+    .validation-hint {
+      font-size: 12px; color: var(--vw-primary);
+      margin-top: 4px; display: none;
+      font-family: var(--vw-font-body);
+    }
+    .validation-hint.visible { display: block; }
+
+    /* Rating: touched but no selection */
+    .rating-scale.touched .rating-btn .r-bar {
+      outline-color: transparent;
+    }
+    /* Inline field states */
+    textarea.field-valid {
+      border-color: var(--vw-success-dark);
+      box-shadow: 0 0 0 3px rgba(58,168,74,0.12);
+    }
+    textarea.field-invalid {
+      border-color: var(--vw-primary);
+      box-shadow: 0 0 0 3px rgba(255,85,68,0.12);
+    }
+    .rating-scale.field-invalid .rating-btn .r-bar {
+      box-shadow: 0 0 0 3px rgba(255,85,68,0.12);
+      border-radius: var(--vw-radius-sm);
+    }
+
+    /* TEXTAREA */
+    textarea {
+      width: 100%;
+      background: var(--vw-surface);
+      border: 1px solid var(--vw-border-strong);
+      border-radius: var(--vw-radius-sm);
+      padding: 10px 12px;
+      color: var(--vw-dark);
+      font-family: var(--vw-font-body);
+      font-size: 15px;
+      line-height: 1.55;
+      resize: vertical; min-height: 82px;
+      transition: border-color var(--vw-dur) var(--vw-ease), box-shadow var(--vw-dur);
+      outline: none;
+    }
+    textarea:focus {
+      border-color: var(--vw-primary);
+      box-shadow: 0 0 0 3px rgba(255,85,68,0.15);
+    }
+    textarea.invalid {
+      border-color: var(--vw-primary-press);
+      box-shadow: 0 0 0 3px rgba(255,85,68,0.1);
+    }
+    .char-counter {
+      font-size: 12px; font-family: var(--vw-font-body);
+      color: var(--vw-muted); text-align: right; margin-top: 3px;
+    }
+    .char-counter.ok { color: var(--vw-success-dark); }
+
+    .form-section { margin-top: 20px; }
+
+    /* UPLOAD */
+    .upload-area {
+      border: 1px dashed var(--vw-border-strong);
+      border-radius: var(--vw-radius-sm);
+      padding: 14px 10px; text-align: center; cursor: pointer;
+      transition: border-color var(--vw-dur) var(--vw-ease), background var(--vw-dur);
+      margin-top: 2px; position: relative;
+      background: var(--vw-surface-2);
+      min-height: 52px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .upload-area:hover, .upload-area.drag-over {
+      border-color: var(--vw-border-strong);
+      background: var(--vw-surface-2);
+    }
+    .upload-area input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+    .upload-hint { font-size: 13px; color: var(--vw-muted-strong); line-height: 1.5; font-family: var(--vw-font-body); }
+    .upload-hint strong { color: var(--vw-dark); font-weight: 500; }
+    .photo-previews { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+    .photo-thumb { position: relative; width: 60px; height: 60px; border-radius: var(--vw-radius-sm); overflow: hidden; border: 1px solid var(--vw-border); flex-shrink: 0; }
+    .photo-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; cursor: pointer; }
+    .photo-thumb-remove {
+      position: absolute; top: 3px; right: 3px;
+      width: 18px; height: 18px; border-radius: 50%;
+      background: rgba(0,0,0,0.45); color: #fff; border: none;
+      cursor: pointer; font-size: 11px;
+      display: flex; align-items: center; justify-content: center; padding: 0;
+      transition: background var(--vw-dur);
+    }
+    .photo-thumb-remove:hover { background: rgba(185,28,28,0.85); }
+
+    /* LOCATION EDIT MODE */
+    .location-edit-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 6px;
+      margin-bottom: 20px;
+      min-height: 28px;
+    }
+    .location-edit-link {
+      font-family: var(--vw-font-body);
+      font-size: 13px;
+      color: var(--vw-primary);
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: color var(--vw-dur) var(--vw-ease);
+    }
+    .location-edit-link:hover { color: var(--vw-primary-hover); }
+    .location-edit-actions {
+      display: none;
+      gap: 8px;
+    }
+    .location-edit-actions.visible { display: flex; }
+    .btn-edit-save {
+      padding: 7px 14px;
+      min-height: 36px;
+      border-radius: var(--vw-radius-sm);
+      border: none;
+      background: var(--vw-dark);
+      color: #fff;
+      font-family: var(--vw-font-body);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background var(--vw-dur) var(--vw-ease);
+    }
+    .btn-edit-save:hover { background: var(--vw-dark-hover); }
+    .btn-edit-discard {
+      padding: 7px 14px;
+      min-height: 36px;
+      border-radius: var(--vw-radius-sm);
+      border: 1px solid var(--vw-border-strong);
+      background: transparent;
+      color: var(--vw-muted-strong);
+      font-family: var(--vw-font-body);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background var(--vw-dur) var(--vw-ease), color var(--vw-dur);
+    }
+    .btn-edit-discard:hover { background: var(--vw-surface-2); color: var(--vw-dark); }
+
+    /* Edit mode: map grows, cursor crosshair, pulsing ring on crosshair */
+    .modal-map-inline.edit-mode,
+    .modal-right.edit-mode { border-color: var(--vw-primary); box-shadow: 0 0 0 2px var(--vw-primary-tint); }
+    .modal-map-inline.edit-mode #preview-map-mobile,
+    .modal-right.edit-mode #preview-map-desktop { cursor: crosshair !important; }
+    .preview-crosshair.edit-pulse circle {
+      animation: pulse-ring 1.2s ease-out infinite;
+    }
+    @keyframes pulse-ring {
+      0%   { r: 4; opacity: 1; }
+      100% { r: 10; opacity: 0; }
+    }
+    .edit-mode-hint {
+      position: absolute;
+      bottom: 44px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(58,58,58,0.85);
+      color: #fff;
+      font-family: var(--vw-font-body);
+      font-size: 12px;
+      padding: 5px 12px;
+      border-radius: var(--vw-radius-full);
+      white-space: nowrap;
+      pointer-events: none;
+      z-index: 1001;
+      display: none;
+    }
+    .edit-mode .edit-mode-hint { display: block; }
+
+    
+    /* ADDRESS ROW with inline edit trigger */
+    .address-row {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+    .address-row .modal-address {
+      margin-bottom: 0;
+      flex: 1;
+    }
+    .address-edit-btn {
+      flex-shrink: 0;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--vw-muted);
+      padding: 2px 4px;
+      border-radius: var(--vw-radius-sm);
+      display: none; /* hidden on mobile -- use link below map */
+      align-items: center;
+      transition: color var(--vw-dur) var(--vw-ease), background var(--vw-dur);
+    }
+    .address-edit-btn:hover { color: var(--vw-primary); background: var(--vw-primary-tint); }
+    /* Show on desktop */
+    @media (min-width: 900px) {
+      .address-edit-btn { display: flex; }
+      /* Hide the below-map link on desktop */
+      #btn-start-edit { display: none; }
+      #location-edit-bar { display: none; }
+    }
+
+        /* NEW FIELDS: name, email, captcha */
+    .field-note {
+      font-size: 12px;
+      color: var(--vw-muted);
+      margin-top: 5px;
+      line-height: 1.45;
+      font-family: var(--vw-font-body);
+    }
+    input[type=text], input[type=email] {
+      width: 100%;
+      background: var(--vw-surface);
+      border: 1px solid var(--vw-border-strong);
+      border-radius: var(--vw-radius-sm);
+      padding: 10px 12px;
+      color: var(--vw-dark);
+      font-family: var(--vw-font-body);
+      font-size: 15px;
+      line-height: 1.5;
+      transition: border-color var(--vw-dur) var(--vw-ease), box-shadow var(--vw-dur);
+      outline: none;
+      min-height: 44px;
+    }
+    input[type=text]:focus, input[type=email]:focus {
+      border-color: var(--vw-primary);
+      box-shadow: 0 0 0 3px rgba(255,85,68,0.15);
+    }
+    input[type=text].field-valid, input[type=email].field-valid {
+      border-color: var(--vw-success-dark);
+      box-shadow: 0 0 0 3px rgba(58,168,74,0.12);
+    }
+    input[type=text].field-invalid, input[type=email].field-invalid {
+      border-color: var(--vw-primary);
+      box-shadow: 0 0 0 3px rgba(255,85,68,0.12);
+    }
+    .captcha-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 2px;
+    }
+    .captcha-question {
+      font-family: var(--vw-font-body);
+      font-size: 14px;
+      color: var(--vw-dark);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .captcha-input {
+      width: 80px !important;
+      flex-shrink: 0;
+      text-align: center;
+      font-family: var(--vw-font-body) !important;
+    }
+
+        /* ACTIONS */
+    .modal-actions { display: flex; gap: 8px; margin-top: 20px; }
+
+    /* Primary button */
+    .btn {
+      padding: 12px 20px;
+      min-height: 44px;
+      border-radius: var(--vw-radius-sm);
+      border: 1px solid transparent;
+      cursor: pointer;
+      font-family: var(--vw-font-body);
+      font-size: 15px; font-weight: 500;
+      letter-spacing: 0.01em;
+      transition: all 150ms var(--vw-ease);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .btn-primary {
+      background: var(--vw-surface-2); color: var(--vw-muted);
+      border-color: var(--vw-border); flex: 1;
+      transition: background 200ms var(--vw-ease), color 200ms var(--vw-ease), border-color 200ms var(--vw-ease);
+    }
+    .btn-primary:hover { background: var(--vw-surface-2); }
+    .btn-primary.ready {
+      background: var(--vw-primary); color: #fff; border-color: transparent;
+    }
+    .btn-primary.ready:hover { background: var(--vw-primary-hover); }
+    .btn-primary.ready:active { background: var(--vw-primary-press); transform: translateY(1px); }
+
+    /* Ghost button -- border-strong for better contrast */
+    .btn-ghost {
+      background: transparent;
+      color: var(--vw-dark);
+      border-color: var(--vw-border-strong);
+    }
+    .btn-ghost:hover { background: var(--vw-surface-2); border-color: var(--vw-dark); }
+
+    /* POPUP */
+    .leaflet-popup-content-wrapper {
+      border-radius: var(--vw-radius-md) !important;
+      box-shadow: var(--vw-shadow-md) !important;
+      border: 1px solid var(--vw-border) !important;
+    }
+    .leaflet-popup-tip-container { display: block; }
+    .popup-inner { font-family: var(--vw-font-body); min-width: 180px; max-width: 220px; }
+    .popup-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 11px; font-family: var(--vw-font-body);
+      font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
+      margin-bottom: 6px; padding: 2px 8px; border-radius: var(--vw-radius-full);
+    }
+    .popup-text { font-size: 14px; line-height: 1.5; color: var(--vw-dark); }
+    .popup-photos { display: flex; gap: 4px; margin-top: 8px; flex-wrap: wrap; }
+    .popup-photo { width: 52px; height: 52px; border-radius: var(--vw-radius-sm); object-fit: cover; cursor: pointer; border: 1px solid var(--vw-border); }
+
+    /* LIGHTBOX */
+    .lightbox { position: fixed; inset: 0; background: rgba(0,0,0,0.82); z-index: 5000; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity var(--vw-dur) var(--vw-ease); }
+    .lightbox.open { opacity: 1; pointer-events: all; }
+    .lightbox img { max-width: 90vw; max-height: 88vh; border-radius: var(--vw-radius-md); box-shadow: var(--vw-shadow-lg); }
+    .lightbox-close { position: absolute; top: 18px; right: 22px; background: none; border: none; color: #fff; font-size: 1.75rem; cursor: pointer; opacity: 0.6; line-height: 1; transition: opacity var(--vw-dur); }
+    .lightbox-close:hover { opacity: 1; }
+
+    /* TOAST */
+    .toast {
+      position: fixed; bottom: 24px; left: 50%;
+      transform: translateX(-50%) translateY(14px);
+      background: var(--vw-dark); color: #fff;
+      padding: 9px 18px; border-radius: var(--vw-radius-full);
+      font-size: 13px; font-family: var(--vw-font-body); font-weight: 500;
+      z-index: 3000; opacity: 0;
+      transition: opacity var(--vw-dur) var(--vw-ease), transform var(--vw-dur) var(--vw-ease);
+      white-space: nowrap; box-shadow: var(--vw-shadow-md);
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* MODAL CLOSE BUTTON */
+    .modal-close {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      width: 32px;
+      height: 32px;
+      border-radius: var(--vw-radius-full);
+      border: 1px solid var(--vw-border);
+      background: var(--vw-surface);
+      color: var(--vw-muted-strong);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background var(--vw-dur) var(--vw-ease), color var(--vw-dur) var(--vw-ease), border-color var(--vw-dur);
+      z-index: 10;
+    }
+    .modal-close:hover {
+      background: var(--vw-surface-2);
+      color: var(--vw-dark);
+      border-color: var(--vw-border-strong);
+    }
+
+    /* Offset title to not overlap with close button */
+    .modal-title-row {
+      display: flex;
+      align-items: flex-start;
+      padding-right: 40px;
+      margin-bottom: 4px;
+    }
+
+        /* PREVIEW MAP TOGGLE */
+    .preview-map-toggle {
+      position: absolute;
+      bottom: 8px;
+      right: 8px;
+      z-index: 1000;
+      display: flex;
+      border: 1px solid var(--vw-border-strong);
+      border-radius: var(--vw-radius-sm);
+      overflow: hidden;
+      box-shadow: var(--vw-shadow-sm);
+    }
+    .preview-toggle-btn {
+      padding: 8px 12px;
+      min-height: 36px;
+      font-family: var(--vw-font-body);
+      font-size: 12px;
+      font-weight: 500;
+      background: rgba(255,255,255,0.92);
+      color: var(--vw-muted-strong);
+      border: none;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background var(--vw-dur) var(--vw-ease), color var(--vw-dur) var(--vw-ease);
+    }
+    .preview-toggle-btn + .preview-toggle-btn {
+      border-left: 1px solid var(--vw-border);
+    }
+    .preview-toggle-btn.active {
+      background: var(--vw-dark);
+      color: #fff;
+    }
+    .preview-toggle-btn:hover:not(.active) {
+      background: var(--vw-surface-2);
+      color: var(--vw-dark);
+    }
+
+        /* MAP LAYER TOGGLE */
+    .map-toggle {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      z-index: 1000;
+      display: flex;
+      border: 1px solid var(--vw-border-strong);
+      border-radius: var(--vw-radius-sm);
+      overflow: hidden;
+      box-shadow: var(--vw-shadow-md);
+      /* Expand the click-safe zone with padding -- invisible but prevents
+         accidental map clicks right next to the buttons */
+      padding: 0;
+      /* pointer-events only on the button itself, not surrounding air */
+    }
+    .map-toggle-btn {
+      padding: 11px 14px;
+      min-height: 44px;
+      font-family: var(--vw-font-body);
+      font-size: 12px;
+      font-weight: 500;
+      background: var(--vw-surface);
+      color: var(--vw-muted-strong);
+      border: none;
+      cursor: pointer;
+      transition: background var(--vw-dur) var(--vw-ease), color var(--vw-dur) var(--vw-ease);
+      white-space: nowrap;
+    }
+    .map-toggle-btn + .map-toggle-btn {
+      border-left: 1px solid var(--vw-border);
+    }
+    .map-toggle-btn.active {
+      background: var(--vw-dark);
+      color: #fff;
+    }
+    .map-toggle-btn:hover:not(.active) {
+      background: var(--vw-surface-2);
+      color: var(--vw-dark);
+    }
+
+        /* LEAFLET */
+    .custom-pin { width: 24px; height: 32px; }
+    .custom-pin svg { width: 100%; height: 100%; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.22)); }
+    .leaflet-popup-close-button { font-size: 16px !important; top: 8px !important; right: 10px !important; color: var(--vw-muted) !important; }
+
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--vw-border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-bar"></div>
+    <div class="logo-text">
+      <span class="logo-top">velofreundliches</span>
+      <span class="logo-bottom">Wetzikon</span>
+    </div>
+  </div>
+  <span style="font-size:13px;color:var(--vw-muted);font-family:var(--vw-font-body);margin-left:2px">Melde-Karte</span>
+  <div class="header-stats" id="header-stats"></div>
+</header>
+
+<div class="workspace">
+
+  <div id="map" style="position:relative">
+    <div class="map-toggle">
+      <button class="map-toggle-btn active" id="btn-layer-street" onclick="setLayer('street', event)" type="button">Karte</button>
+      <button class="map-toggle-btn" id="btn-layer-satellite" onclick="setLayer('satellite', event)" type="button">Satellit</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <!-- Left / single column: form fields -->
+    <div class="modal-left">
+      <button class="modal-close" onclick="closeModal()" type="button" aria-label="Modal schliessen">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <line x1="1" y1="1" x2="13" y2="13" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+          <line x1="13" y1="1" x2="1" y2="13" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+        </svg>
+      </button>
+      <div class="modal-title-row">
+        <h2 class="modal-title" id="modal-title">Meldung einreichen</h2>
+      </div>
+      <div class="modal-coords" id="modal-coords" aria-label="Koordinaten"></div>
+      <div class="address-row">
+        <div class="modal-address" id="modal-address">
+          <span class="address-loading" id="address-loading" style="display:none" aria-live="polite">&#x2026; Adresse wird geladen</span>
+          <span id="address-text" aria-live="polite"></span>
+        </div>
+        <button class="address-edit-btn" id="btn-start-edit-desktop" onclick="startLocationEdit()" type="button" aria-label="Standort anpassen">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Map preview: visible here on mobile, hidden on wide viewports (shown in right col) -->
+      <div class="modal-map-inline">
+        <div id="preview-map-mobile"></div>
+        <div class="preview-map-toggle" id="preview-toggle-mobile" aria-hidden="true">
+          <button class="preview-toggle-btn active" onclick="setPreviewLayer('street', event)" type="button">Karte</button>
+          <button class="preview-toggle-btn" onclick="setPreviewLayer('satellite', event)" type="button">Satellit</button>
+        </div>
+        <div class="edit-mode-hint" aria-hidden="true">Karte verschieben, um Standort anzupassen</div>
+        <div class="preview-label" aria-hidden="true">Standort-Vorschau</div>
+        <svg class="preview-crosshair" width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <circle cx="12" cy="12" r="4" fill="none" stroke="#ca8a04" stroke-width="2"/>
+          <line x1="12" y1="2" x2="12" y2="8" stroke="#ca8a04" stroke-width="2" stroke-linecap="round"/>
+          <line x1="12" y1="16" x2="12" y2="22" stroke="#ca8a04" stroke-width="2" stroke-linecap="round"/>
+          <line x1="2" y1="12" x2="8" y2="12" stroke="#ca8a04" stroke-width="2" stroke-linecap="round"/>
+          <line x1="16" y1="12" x2="22" y2="12" stroke="#ca8a04" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
+
+      <!-- Location edit bar (below map) -->
+      <div class="location-edit-bar" id="location-edit-bar">
+        <button class="location-edit-link" id="btn-start-edit" onclick="startLocationEdit()" type="button" aria-label="Standort auf der Karte anpassen">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Standort anpassen
+        </button>
+        <div class="location-edit-actions" id="location-edit-actions">
+          <button class="btn-edit-discard" onclick="discardLocationEdit()" type="button">Verwerfen</button>
+          <button class="btn-edit-save" onclick="saveLocationEdit()" type="button">Standort speichern</button>
+        </div>
+      </div>
+
+      <fieldset class="rating-fieldset">
+        <legend class="field-label"><span class="required" aria-label="Pflichtfeld">*</span>&nbsp;Bewertung</legend>
+        <div class="rating-scale" id="rating-scale" role="group" aria-label="Bewertung der Velostelle">
+          <button class="rating-btn" data-r="1" onclick="selectRating(1)" aria-pressed="false" type="button"><div class="r-bar"></div><span class="r-label">Gef&#xE4;hrlich</span></button>
+          <button class="rating-btn" data-r="2" onclick="selectRating(2)" aria-pressed="false" type="button"><div class="r-bar"></div><span class="r-label">Schlecht</span></button>
+          <button class="rating-btn" data-r="3" onclick="selectRating(3)" aria-pressed="false" type="button"><div class="r-bar"></div><span class="r-label">Akzeptabel</span></button>
+          <button class="rating-btn" data-r="4" onclick="selectRating(4)" aria-pressed="false" type="button"><div class="r-bar"></div><span class="r-label">Gut</span></button>
+          <button class="rating-btn" data-r="5" onclick="selectRating(5)" aria-pressed="false" type="button"><div class="r-bar"></div><span class="r-label">Ausgezeichnet</span></button>
+        </div>
+        <div class="validation-hint" id="hint-type" role="alert">Bitte eine Bewertung ausw&#xE4;hlen.</div>
+      </fieldset>
+
+      <div class="form-section">
+        <label class="field-label" for="comment-input"><span class="required" aria-label="Pflichtfeld">*</span>&nbsp;Kommentar</label>
+        <textarea id="comment-input" placeholder="Was f&#xE4;llt an diesem Ort auf? (mind. 10 Zeichen)" aria-describedby="char-counter hint-comment" aria-required="true"></textarea>
+        <div class="char-counter" id="char-counter" aria-live="polite">0 / 10 Zeichen</div>
+        <div class="validation-hint" id="hint-comment" role="alert">Bitte mind. 10 Zeichen eingeben.</div>
+      </div>
+
+      <div class="form-section">
+        <label class="field-label" for="photo-input">Fotos <span class="field-optional">(optional)</span></label>
+        <div class="upload-area" id="upload-area">
+          <input type="file" id="photo-input" accept="image/*" multiple aria-label="Fotos ausw&#xE4;hlen" />
+          <div class="upload-hint" aria-hidden="true"><strong>Fotos ausw&#xE4;hlen</strong> oder hierher ziehen&nbsp;&mdash; JPG, PNG, WEBP</div>
+        </div>
+        <div class="photo-previews" id="photo-previews" aria-label="Hochgeladene Fotos"></div>
+      </div>
+
+      <div class="form-section">
+        <label class="field-label" for="name-input"><span class="required" aria-label="Pflichtfeld">*</span>&nbsp;Name</label>
+        <input type="text" id="name-input" placeholder="Vorname Nachname" autocomplete="name" aria-required="true" aria-describedby="hint-name" />
+        <div class="validation-hint" id="hint-name" role="alert">Bitte mind. 3 Zeichen eingeben.</div>
+      </div>
+
+      <div class="form-section">
+        <label class="field-label" for="email-input"><span class="required" aria-label="Pflichtfeld">*</span>&nbsp;E-Mail</label>
+        <input type="email" id="email-input" placeholder="name@beispiel.ch" autocomplete="email" inputmode="email" aria-required="true" aria-describedby="hint-email" />
+        <div class="validation-hint" id="hint-email" role="alert">Bitte eine g&#xFC;ltige E-Mail-Adresse eingeben.</div>
+        <p class="field-note">Ihre Meldung wird erst nach Best&#xE4;tigung per E-Mail ver&#xF6;ffentlicht.</p>
+      </div>
+
+      <div class="form-section">
+        <label class="field-label" for="captcha-input"><span class="required" aria-label="Pflichtfeld">*</span>&nbsp;Sicherheitsfrage</label>
+        <div class="captcha-row">
+          <span class="captcha-question" id="captcha-question" aria-live="polite"></span>
+          <input type="text" id="captcha-input" class="captcha-input" inputmode="numeric" pattern="[0-9]*" placeholder="?" autocomplete="off" aria-required="true" aria-describedby="hint-captcha" maxlength="3" />
+        </div>
+        <div class="validation-hint" id="hint-captcha" role="alert">Falsche Antwort. Bitte nochmals versuchen.</div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeModal()" type="button">Abbrechen</button>
+        <button class="btn btn-primary" id="submit-btn" onclick="submitEntry()" type="button">Melden</button>
+      </div>
+    </div>
+
+    <!-- Right column: map preview on wide viewports -->
+    <div class="modal-right" aria-hidden="true">
+      <div id="preview-map-desktop"></div>
+      <div class="preview-map-toggle" id="preview-toggle-desktop">
+        <button class="preview-toggle-btn active" onclick="setPreviewLayer('street', event)" type="button">Karte</button>
+        <button class="preview-toggle-btn" onclick="setPreviewLayer('satellite', event)" type="button">Satellit</button>
+      </div>
+      <div class="edit-mode-hint" aria-hidden="true">Karte verschieben, um Standort anzupassen</div>
+      <div class="preview-label">Standort-Vorschau</div>
+      <svg class="preview-crosshair" width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <circle cx="12" cy="12" r="4" fill="none" stroke="#ca8a04" stroke-width="2"/>
+        <line x1="12" y1="2" x2="12" y2="8" stroke="#ca8a04" stroke-width="2" stroke-linecap="round"/>
+        <line x1="12" y1="16" x2="12" y2="22" stroke="#ca8a04" stroke-width="2" stroke-linecap="round"/>
+        <line x1="2" y1="12" x2="8" y2="12" stroke="#ca8a04" stroke-width="2" stroke-linecap="round"/>
+        <line x1="16" y1="12" x2="22" y2="12" stroke="#ca8a04" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </div>
+  </div>
+</div>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <button class="lightbox-close" onclick="closeLightbox()">&times;</button>
+  <img id="lightbox-img" src="" alt="Foto" onclick="event.stopPropagation()" />
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  // RATING CONFIG
+  var RATINGS = {
+    1: { label: 'Gef\u00E4hrlich',    color: '#b91c1c', bg: 'rgba(185,28,28,0.12)',  icon: '\u26A0\uFE0F' },
+    2: { label: 'Schlecht',           color: '#ea580c', bg: 'rgba(234,88,12,0.12)',  icon: '\uD83D\uDE25' },
+    3: { label: 'Akzeptabel',         color: '#ca8a04', bg: 'rgba(202,138,4,0.12)',  icon: '\uD83D\uDE10' },
+    4: { label: 'Gut',                color: '#65a30d', bg: 'rgba(101,163,13,0.12)', icon: '\uD83D\uDE04' },
+    5: { label: 'Ausgezeichnet',      color: '#15803d', bg: 'rgba(21,128,61,0.12)',  icon: '\uD83C\uDF1F' }
+  };
+
+  var entries = [], pendingLatLng = null, selectedRating = null, markers = {}, pendingPhotos = [];
+
+  // MAP
+  var map = L.map('map', { center: [47.3235, 8.7985], zoom: 15 });
+  var LAYERS = {
+    street:    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', { attribution: '&copy; <a href="https://www.esri.com/">Esri</a>', maxZoom: 19 }),
+    satellite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',    { attribution: '&copy; <a href="https://www.esri.com/">Esri</a>', maxZoom: 19 })
+  };
+  var currentLayer = 'street';
+  LAYERS.street.addTo(map);
+
+  function setLayer(name, evt) {
+    if (evt) { evt.stopPropagation(); }
+    if (name === currentLayer) return;
+    map.removeLayer(LAYERS[currentLayer]);
+    LAYERS[name].addTo(map);
+    currentLayer = name;
+    document.getElementById('btn-layer-street').classList.toggle('active', name === 'street');
+    document.getElementById('btn-layer-satellite').classList.toggle('active', name === 'satellite');
+  }
+
+  map.on('click', function(e) { pendingLatLng = e.latlng; openModal(e.latlng); });
+
+  // Prevent toggle button container from bubbling clicks to the map
+  var toggleEl = document.querySelector('.map-toggle');
+  if (toggleEl) {
+    L.DomEvent.disableClickPropagation(toggleEl);
+    L.DomEvent.disableScrollPropagation(toggleEl);
+  }
+
+  // Also prevent Leaflet's own zoom control from opening the modal
+  // (L.control.zoom is rendered after map init -- wait one tick)
+  setTimeout(function() {
+    var zoomEl = document.querySelector('.leaflet-control-zoom');
+    if (zoomEl) {
+      L.DomEvent.disableClickPropagation(zoomEl);
+    }
+  }, 0);
+
+  // ICON
+  function makeIcon(rating) {
+    var cfg = RATINGS[rating];
+    var svg = '<svg viewBox="0 0 24 32" xmlns="http://www.w3.org/2000/svg">'
+      + '<path d="M12 0C5.37 0 0 5.37 0 12c0 8.5 12 20 12 20S24 20.5 24 12C24 5.37 18.63 0 12 0z" fill="' + cfg.color + '"/>'
+      + '<circle cx="12" cy="12" r="5" fill="rgba(255,255,255,0.35)"/>'
+      + '</svg>';
+    return L.divIcon({ html: '<div class="custom-pin">' + svg + '</div>', iconSize:[24,32], iconAnchor:[12,32], popupAnchor:[0,-34], className:'' });
+  }
+
+  // PREVIEW MAPS (mobile inline + desktop right column)
+  var previewMapMobile = null;
+  var previewMapDesktop = null;
+  var previewLayerMobile = null;
+  var previewLayerDesktop = null;
+  var currentPreviewLayer = 'street';
+  var TILE_URLS = {
+    street:    'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
+    satellite: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+  };
+  var TILE_URL = TILE_URLS.street;
+  var MAP_OPTS = { zoom: 17, zoomControl: false, attributionControl: false, dragging: false, scrollWheelZoom: false, doubleClickZoom: false, boxZoom: false, keyboard: false };
+
+  function initPreviewMap(latlng) {
+    var isDesktop = window.matchMedia('(min-width: 900px)').matches;
+    if (isDesktop) {
+      if (!previewMapDesktop) {
+        previewMapDesktop = L.map('preview-map-desktop', Object.assign({ center: latlng }, MAP_OPTS));
+        previewLayerDesktop = L.tileLayer(TILE_URLS[currentPreviewLayer], { maxZoom: 19 }).addTo(previewMapDesktop);
+        L.DomEvent.disableClickPropagation(document.getElementById('preview-map-desktop').parentElement);
+      } else { previewMapDesktop.setView(latlng, 17); }
+      setTimeout(function() { previewMapDesktop.invalidateSize(); }, 80);
+    } else {
+      if (!previewMapMobile) {
+        previewMapMobile = L.map('preview-map-mobile', Object.assign({ center: latlng }, MAP_OPTS));
+        previewLayerMobile = L.tileLayer(TILE_URLS[currentPreviewLayer], { maxZoom: 19 }).addTo(previewMapMobile);
+        L.DomEvent.disableClickPropagation(document.getElementById('preview-map-mobile').parentElement);
+      } else { previewMapMobile.setView(latlng, 17); }
+      setTimeout(function() { previewMapMobile.invalidateSize(); }, 80);
+    }
+  }
+
+  function setPreviewLayer(name, evt) {
+    if (evt) { evt.stopPropagation(); }
+    if (name === currentPreviewLayer) return;
+    currentPreviewLayer = name;
+    // Update both maps if they exist
+    if (previewMapMobile && previewLayerMobile) {
+      previewMapMobile.removeLayer(previewLayerMobile);
+      previewLayerMobile = L.tileLayer(TILE_URLS[name], { maxZoom: 19 }).addTo(previewMapMobile);
+    }
+    if (previewMapDesktop && previewLayerDesktop) {
+      previewMapDesktop.removeLayer(previewLayerDesktop);
+      previewLayerDesktop = L.tileLayer(TILE_URLS[name], { maxZoom: 19 }).addTo(previewMapDesktop);
+    }
+    // Update all preview toggle buttons
+    document.querySelectorAll('.preview-toggle-btn').forEach(function(btn) {
+      btn.classList.toggle('active', btn.textContent.trim() === (name === 'street' ? 'Karte' : 'Satellit'));
+    });
+  }
+
+  // REVERSE GEOCODING via photon.komoot.de (free, no key, no User-Agent requirement)
+  function reverseGeocode(latlng) {
+    var url = 'https://photon.komoot.io/reverse?lon=' + latlng.lng + '&lat=' + latlng.lat + '&lang=de';
+    fetch(url)
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        var feat = data.features && data.features[0];
+        var text = 'Adresse unbekannt';
+        if (feat) {
+          var p = feat.properties || {};
+          var parts = [];
+          var road = p.street || p.name || '';
+          var hn   = p.housenumber || '';
+          var city = p.city || p.town || p.village || p.locality || '';
+          if (road) parts.push(road + (hn ? ' ' + hn : ''));
+          if (city) parts.push(city);
+          if (parts.length) text = parts.join(', ');
+          else if (p.name) text = p.name;
+        }
+        document.getElementById('address-text').textContent = text;
+        document.getElementById('address-loading').style.display = 'none';
+      })
+      .catch(function() {
+        document.getElementById('address-text').textContent = 'Adresse konnte nicht geladen werden';
+        document.getElementById('address-loading').style.display = 'none';
+      });
+  }
+
+  // MODAL
+  function openModal(latlng) {
+    selectedRating = null; pendingPhotos = [];
+    document.querySelectorAll('.rating-btn').forEach(function(b) { b.classList.remove('selected'); });
+    // bar reset handled by CSS
+    document.getElementById('comment-input').value = '';
+    document.getElementById('comment-input').classList.remove('invalid', 'field-valid', 'field-invalid');
+    document.getElementById('rating-scale').classList.remove('field-invalid');
+    commentTouched = false;
+    nameTouched    = false;
+    emailTouched   = false;
+    document.getElementById('name-input').value = '';
+    document.getElementById('name-input').classList.remove('field-valid', 'field-invalid');
+    document.getElementById('email-input').value = '';
+    document.getElementById('email-input').classList.remove('field-valid', 'field-invalid');
+    document.getElementById('hint-name').classList.remove('visible');
+    document.getElementById('hint-email').classList.remove('visible');
+    document.getElementById('char-counter').textContent = '0 / 10 Zeichen';
+    generateCaptcha();
+    document.getElementById('char-counter').className = 'char-counter';
+    document.getElementById('submit-btn').disabled = true;
+    document.getElementById('hint-type').classList.remove('visible');
+    document.getElementById('hint-comment').classList.remove('visible');
+    document.getElementById('photo-input').value = '';
+    document.getElementById('photo-previews').innerHTML = '';
+    document.getElementById('modal-coords').textContent = latlng.lat.toFixed(5) + ', ' + latlng.lng.toFixed(5);
+    document.getElementById('address-text').textContent = '';
+    document.getElementById('address-loading').style.display = 'inline';
+    reverseGeocode(latlng);
+    document.getElementById('modal-overlay').classList.add('open');
+    setTimeout(function() { initPreviewMap(latlng); document.getElementById('comment-input').focus(); }, 60);
+  }
+
+  function closeModal() {
+    if (editMode) exitEditMode();
+    document.getElementById('modal-overlay').classList.remove('open');
+    pendingLatLng = null; selectedRating = null; pendingPhotos = [];
+    currentPreviewLayer = 'street';
+  }
+  document.getElementById('modal-overlay').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
+
+  // RATING SELECTION
+  function selectRating(r) {
+    selectedRating = r;
+    document.querySelectorAll('.rating-btn').forEach(function(b) { b.classList.remove('selected'); });
+    document.querySelector('.rating-btn[data-r="' + r + '"]').classList.add('selected');
+    // colour the progress bar up to selected
+    // bar highlight now handled purely by CSS .selected class
+    document.getElementById('hint-type').classList.remove('visible');
+    document.getElementById('rating-scale').classList.remove('field-invalid');
+    validateForm();
+  }
+
+  // LOCATION EDIT MODE
+  var editMode = false;
+  var editTempLatLng = null;
+
+  // ── LOCATION EDIT ──
+  // Simple state: editMode flag + savedOriginal for discard
+  var editOriginalLatLng = null;
+
+  function startLocationEdit() {
+    editMode = true;
+    editTempLatLng = null;
+    // Remember original so discard can restore it
+    editOriginalLatLng = pendingLatLng ? L.latLng(pendingLatLng.lat, pendingLatLng.lng) : null;
+
+    [previewMapMobile, previewMapDesktop].forEach(function(m) {
+      if (!m) return;
+      m.dragging.enable();
+      m.scrollWheelZoom.enable();
+      // Update editTempLatLng live as the map is dragged
+      m.on('moveend', onPreviewMoveEnd);
+    });
+    // Initialise with crosshair position of the visible map
+    var activeMap = getActivePreviewMap();
+    if (activeMap) editTempLatLng = getCrosshairLatLng(activeMap);
+
+    document.querySelector('.modal-map-inline') && document.querySelector('.modal-map-inline').classList.add('edit-mode');
+    document.querySelector('.modal-right')       && document.querySelector('.modal-right').classList.add('edit-mode');
+    document.querySelectorAll('.preview-crosshair circle').forEach(function(c) { c.classList.add('edit-pulse'); });
+
+    document.getElementById('btn-start-edit').style.display = 'none';
+    document.getElementById('location-edit-actions').classList.add('visible');
+    var desktopBtn = document.getElementById('btn-start-edit-desktop');
+    if (desktopBtn) desktopBtn.style.display = 'none';
+    document.getElementById('location-edit-bar').style.display = 'flex';
+  }
+
+  function getActivePreviewMap() {
+    return window.matchMedia('(min-width: 900px)').matches ? previewMapDesktop : previewMapMobile;
+  }
+
+  function getCrosshairLatLng(m) {
+    // Always use the map that is actually visible
+    var activeMap = getActivePreviewMap() || m;
+    activeMap.invalidateSize({ animate: false });
+    var rect = activeMap.getContainer().getBoundingClientRect();
+    var centerPoint = L.point(rect.width / 2, rect.height / 2);
+    return activeMap.containerPointToLatLng(centerPoint);
+  }
+
+  function onPreviewMoveEnd(e) {
+    if (!editMode) return;
+    var latlng = getCrosshairLatLng(e.target);
+    editTempLatLng = L.latLng(latlng.lat, latlng.lng);
+    document.getElementById('modal-coords').textContent = latlng.lat.toFixed(5) + ', ' + latlng.lng.toFixed(5);
+    document.getElementById('address-loading').style.display = 'inline';
+    document.getElementById('address-text').textContent = '';
+    reverseGeocode(editTempLatLng);
+  }
+
+  function saveLocationEdit() {
+    // If user dragged without releasing (moveend not yet fired), read crosshair directly
+    if (!editTempLatLng) {
+      var activeMap = getActivePreviewMap();
+      if (activeMap) editTempLatLng = getCrosshairLatLng(activeMap);
+    }
+    var savedLat = editTempLatLng ? editTempLatLng.lat : (pendingLatLng ? pendingLatLng.lat : null);
+    var savedLng = editTempLatLng ? editTempLatLng.lng : (pendingLatLng ? pendingLatLng.lng : null);
+    if (savedLat === null) { exitEditMode(); return; }
+
+    exitEditMode();
+
+    pendingLatLng = L.latLng(savedLat, savedLng);
+    document.getElementById('modal-coords').textContent = savedLat.toFixed(5) + ', ' + savedLng.toFixed(5);
+
+    // Listen for the CSS transition end, then sync Leaflet -- avoids visual jump
+    // No height transition -- sync immediately
+    var target = L.latLng(savedLat, savedLng);
+    var activeMap = getActivePreviewMap();
+    if (activeMap) {
+      activeMap.invalidateSize({animate: false});
+      activeMap.setView(target, activeMap.getZoom(), {animate: false});
+    }
+  }
+
+  function discardLocationEdit() {
+    // Read original coords before exitEditMode
+    var origLat = editOriginalLatLng ? editOriginalLatLng.lat : null;
+    var origLng = editOriginalLatLng ? editOriginalLatLng.lng : null;
+
+    exitEditMode();
+
+    if (origLat !== null) {
+      pendingLatLng = L.latLng(origLat, origLng);
+      document.getElementById('modal-coords').textContent = origLat.toFixed(5) + ', ' + origLng.toFixed(5);
+      document.getElementById('address-text').textContent = '';
+      document.getElementById('address-loading').style.display = 'inline';
+      reverseGeocode(pendingLatLng);
+      setTimeout(function() {
+        var zoom = (previewMapMobile || previewMapDesktop).getZoom();
+        var orig = L.latLng(origLat, origLng);
+        if (previewMapMobile)  { previewMapMobile.invalidateSize();  previewMapMobile.setView(orig,  zoom, { animate: false }); }
+        if (previewMapDesktop) { previewMapDesktop.invalidateSize(); previewMapDesktop.setView(orig, zoom, { animate: false }); }
+      }, 320);
+    }
+  }
+
+  function exitEditMode() {
+    editMode = false;
+    editTempLatLng = null;
+
+    [previewMapMobile, previewMapDesktop].forEach(function(m) {
+      if (!m) return;
+      m.off('moveend', onPreviewMoveEnd);
+      m.dragging.disable();
+      m.scrollWheelZoom.disable();
+    });
+
+    document.querySelector('.modal-map-inline') && document.querySelector('.modal-map-inline').classList.remove('edit-mode');
+    document.querySelector('.modal-right')       && document.querySelector('.modal-right').classList.remove('edit-mode');
+    document.querySelectorAll('.preview-crosshair circle').forEach(function(c) { c.classList.remove('edit-pulse'); });
+
+    document.getElementById('btn-start-edit').style.display = '';
+    document.getElementById('location-edit-actions').classList.remove('visible');
+    var desktopBtn = document.getElementById('btn-start-edit-desktop');
+    if (desktopBtn) desktopBtn.style.display = '';
+    var isDesktop = window.matchMedia('(min-width: 900px)').matches;
+    if (isDesktop) document.getElementById('location-edit-bar').style.display = 'none';
+  }
+
+    // SCROLL-INTO-VIEW ON FOCUS (mobile keyboard pushes viewport up)
+  function scrollFieldIntoView(el) {
+    // Only relevant on mobile -- skip if visualViewport is full height
+    if (!window.visualViewport) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+    // Wait one frame for the keyboard to start appearing, then check
+    setTimeout(function() {
+      var vvHeight = window.visualViewport.height;
+      var rect = el.getBoundingClientRect();
+      var scrollEl = document.querySelector('.modal-left');
+      if (!scrollEl) return;
+      // How far is the bottom of the field below the visible viewport?
+      var overflow = rect.bottom - vvHeight + 16; // 16px breathing room
+      if (overflow > 0) {
+        scrollEl.scrollBy({ top: overflow, behavior: 'smooth' });
+      }
+    }, 120); // 120ms: enough for iOS keyboard animation to start
+  }
+
+  // Attach focus → scroll to all interactive fields in the modal
+  ['comment-input', 'photo-input'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) {
+      el.addEventListener('focus', function() { scrollFieldIntoView(this); });
+    }
+  });
+
+  // Also scroll rating buttons into view when tapped
+  document.querySelectorAll('.rating-btn').forEach(function(btn) {
+    btn.addEventListener('focus', function() { scrollFieldIntoView(this); });
+  });
+
+  // Re-check on visualViewport resize (keyboard fully open)
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', function() {
+      var active = document.activeElement;
+      if (active && active.closest('.modal-left')) {
+        scrollFieldIntoView(active);
+      }
+    });
+  }
+
+  // COMMENT
+  var commentTouched = false;
+  var nameTouched    = false;
+  var emailTouched   = false;
+  var captchaA = 0, captchaB = 0, captchaAnswer = 0;
+
+  function generateCaptcha() {
+    captchaA = Math.floor(Math.random() * 9) + 1;
+    captchaB = Math.floor(Math.random() * 9) + 1;
+    captchaAnswer = captchaA + captchaB;
+    document.getElementById('captcha-question').textContent = 'Was ist ' + captchaA + ' + ' + captchaB + '?';
+    document.getElementById('captcha-input').value = '';
+    document.getElementById('captcha-input').classList.remove('field-valid', 'field-invalid');
+    document.getElementById('hint-captcha').classList.remove('visible');
+  }
+
+  function applyFieldState(el, valid, hintId) {
+    var hint = document.getElementById(hintId);
+    el.classList.toggle('field-valid',   valid);
+    el.classList.toggle('field-invalid', !valid);
+    hint.classList.toggle('visible',     !valid);
+  }
+
+  document.getElementById('comment-input').addEventListener('input', function() {
+    var len = this.value.trim().length;
+    var counter = document.getElementById('char-counter');
+    counter.textContent = len + ' / 10 Zeichen';
+    counter.className = 'char-counter' + (len >= 10 ? ' ok' : '');
+    // Show inline state only after first blur
+    if (commentTouched) { applyCommentState(this, len); }
+    validateForm();
+  });
+
+  document.getElementById('comment-input').addEventListener('blur', function() {
+    commentTouched = true;
+    var len = this.value.trim().length;
+    applyCommentState(this, len);
+    validateForm();
+  });
+
+  // NAME
+  document.getElementById('name-input').addEventListener('blur', function() {
+    nameTouched = true;
+    applyFieldState(this, this.value.trim().length >= 3, 'hint-name');
+    validateForm();
+  });
+  document.getElementById('name-input').addEventListener('input', function() {
+    if (nameTouched) applyFieldState(this, this.value.trim().length >= 3, 'hint-name');
+    validateForm();
+  });
+  document.getElementById('name-input').addEventListener('focus', function() { scrollFieldIntoView(this); });
+
+  // EMAIL
+  document.getElementById('email-input').addEventListener('blur', function() {
+    emailTouched = true;
+    applyFieldState(this, isValidEmail(this.value.trim()), 'hint-email');
+    validateForm();
+  });
+  document.getElementById('email-input').addEventListener('input', function() {
+    if (emailTouched) applyFieldState(this, isValidEmail(this.value.trim()), 'hint-email');
+    validateForm();
+  });
+  document.getElementById('email-input').addEventListener('focus', function() { scrollFieldIntoView(this); });
+
+  // CAPTCHA
+  document.getElementById('captcha-input').addEventListener('blur', function() {
+    applyFieldState(this, parseInt(this.value) === captchaAnswer, 'hint-captcha');
+    validateForm();
+  });
+  document.getElementById('captcha-input').addEventListener('input', function() {
+    applyFieldState(this, parseInt(this.value) === captchaAnswer, 'hint-captcha');
+    validateForm();
+  });
+  document.getElementById('captcha-input').addEventListener('focus', function() { scrollFieldIntoView(this); });
+
+  function isValidEmail(v) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+  }
+
+  function applyCommentState(el, len) {
+    var hint = document.getElementById('hint-comment');
+    if (len >= 10) {
+      el.classList.remove('field-invalid', 'invalid');
+      el.classList.add('field-valid');
+      hint.classList.remove('visible');
+    } else {
+      el.classList.remove('field-valid');
+      el.classList.add('field-invalid');
+      hint.classList.add('visible');
+    }
+  }
+
+  function validateForm() {
+    var ok = !!(
+      selectedRating &&
+      document.getElementById('comment-input').value.trim().length >= 10 &&
+      document.getElementById('name-input').value.trim().length >= 3 &&
+      isValidEmail(document.getElementById('email-input').value.trim()) &&
+      parseInt(document.getElementById('captcha-input').value) === captchaAnswer
+    );
+    var btn = document.getElementById('submit-btn');
+    btn.disabled = false;
+    if (ok) {
+      btn.classList.add('ready');
+      btn.setAttribute('aria-disabled', 'false');
+    } else {
+      btn.classList.remove('ready');
+      btn.setAttribute('aria-disabled', 'false');
+    }
+  }
+
+  // PHOTOS
+  document.getElementById('photo-input').addEventListener('change', function(e) { handleFiles(e.target.files); });
+  var ua = document.getElementById('upload-area');
+  ua.addEventListener('dragover', function(e) { e.preventDefault(); this.classList.add('drag-over'); });
+  ua.addEventListener('dragleave', function() { this.classList.remove('drag-over'); });
+  ua.addEventListener('drop', function(e) { e.preventDefault(); this.classList.remove('drag-over'); handleFiles(e.dataTransfer.files); });
+
+  function handleFiles(files) {
+    Array.from(files).forEach(function(file) {
+      if (!file.type.startsWith('image/')) return;
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        var id = Date.now() + Math.random();
+        pendingPhotos.push({ id: id, dataUrl: e.target.result });
+        renderThumb(id, e.target.result);
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function renderThumb(id, dataUrl) {
+    var container = document.getElementById('photo-previews');
+    var div = document.createElement('div'); div.className = 'photo-thumb'; div.id = 'thumb-' + id;
+    var img = document.createElement('img'); img.src = dataUrl; img.alt = 'Vorschau'; img.onclick = function() { openLightbox(dataUrl); };
+    var btn = document.createElement('button'); btn.className = 'photo-thumb-remove'; btn.title = 'Entfernen'; btn.innerHTML = '&times;'; btn.onclick = function() { removePhoto(id); };
+    div.appendChild(img); div.appendChild(btn); container.appendChild(div);
+  }
+
+  function removePhoto(id) {
+    pendingPhotos = pendingPhotos.filter(function(p) { return p.id !== id; });
+    var el = document.getElementById('thumb-' + id); if (el) el.remove();
+  }
+
+  // SUBMIT
+  function submitEntry() {
+    var valid = true;
+    var firstErrorEl = null;
+
+    if (!selectedRating) {
+      document.getElementById('hint-type').classList.add('visible');
+      document.getElementById('rating-scale').classList.add('field-invalid');
+      if (!firstErrorEl) firstErrorEl = document.querySelector('.rating-btn');
+      valid = false;
+    }
+
+    var comment = document.getElementById('comment-input').value.trim();
+    commentTouched = true;
+    applyCommentState(document.getElementById('comment-input'), comment.length);
+    if (comment.length < 10) {
+      if (!firstErrorEl) firstErrorEl = document.getElementById('comment-input');
+      valid = false;
+    }
+
+    // Name
+    nameTouched = true;
+    var nameVal = document.getElementById('name-input').value.trim();
+    var nameOk = nameVal.length >= 3;
+    applyFieldState(document.getElementById('name-input'), nameOk, 'hint-name');
+    if (!nameOk) { if (!firstErrorEl) firstErrorEl = document.getElementById('name-input'); valid = false; }
+
+    // Email
+    emailTouched = true;
+    var emailVal = document.getElementById('email-input').value.trim();
+    var emailOk = isValidEmail(emailVal);
+    applyFieldState(document.getElementById('email-input'), emailOk, 'hint-email');
+    if (!emailOk) { if (!firstErrorEl) firstErrorEl = document.getElementById('email-input'); valid = false; }
+
+    // Captcha
+    var captchaOk = parseInt(document.getElementById('captcha-input').value) === captchaAnswer;
+    applyFieldState(document.getElementById('captcha-input'), captchaOk, 'hint-captcha');
+    if (!captchaOk) {
+      if (!firstErrorEl) firstErrorEl = document.getElementById('captcha-input');
+      generateCaptcha(); // regenerate on wrong answer
+      valid = false;
+    }
+
+    if (!valid) {
+      if (firstErrorEl) { firstErrorEl.focus(); }
+      return;
+    }
+    if (!pendingLatLng) return;
+    var entry = { id: Date.now(), lat: pendingLatLng.lat, lng: pendingLatLng.lng, rating: selectedRating, comment: comment, photos: pendingPhotos.map(function(p){ return p.dataUrl; }) };
+    entries.push(entry); addMarker(entry); renderSidebar(); updateHeader(); closeModal(); showToast('Meldung erfasst!');
+  }
+
+  // MARKER
+  function addMarker(entry) {
+    var cfg = RATINGS[entry.rating];
+    var photosHtml = '';
+    if (entry.photos && entry.photos.length) {
+      photosHtml = '<div class="popup-photos">' + entry.photos.map(function(url) { return '<img class="popup-photo" src="' + url + '" onclick="openLightbox(\'' + url + '\')" />'; }).join('') + '</div>';
+    }
+    var popup = '<div class="popup-inner">'
+      + '<div class="popup-badge" style="background:' + cfg.bg + ';color:' + cfg.color + '">'
+      + cfg.label + '</div>'
+      + '<div class="popup-text">' + escHtml(entry.comment) + '</div>' + photosHtml + '</div>';
+    var m = L.marker([entry.lat, entry.lng], { icon: makeIcon(entry.rating) }).addTo(map).bindPopup(popup, { maxWidth: 260 });
+    markers[entry.id] = m;
+  }
+
+  function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  // SIDEBAR
+  function renderSidebar() {
+    // Sidebar removed -- no-op
+  }
+
+  function focusEntry(id) {
+    var entry = entries.find(function(e) { return e.id === id; });
+    if (!entry) return;
+    document.querySelectorAll('.entry-card').forEach(function(c) { c.classList.remove('active'); });
+    var card = document.getElementById('card-' + id); if (card) card.classList.add('active');
+    map.setView([entry.lat, entry.lng], 16, { animate: true });
+    if (markers[id]) markers[id].openPopup();
+  }
+
+  // HEADER STATS
+  function updateHeader() {
+    var stats = document.getElementById('header-stats');
+    var counts = {1:0, 2:0, 3:0, 4:0, 5:0};
+    entries.forEach(function(e) { counts[e.rating]++; });
+    stats.innerHTML = [1,2,3,4,5].map(function(r) {
+      return '<div class="stat-pill">'
+        + '<div class="stat-dot" style="background:' + RATINGS[r].color + '"></div>'
+        + '<span>' + counts[r] + '</span></div>';
+    }).join('');
+  }
+
+  // LIGHTBOX
+  function openLightbox(url) { document.getElementById('lightbox-img').src = url; document.getElementById('lightbox').classList.add('open'); }
+  function closeLightbox() { document.getElementById('lightbox').classList.remove('open'); }
+  document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { closeLightbox(); closeModal(); } });
+
+  // TOAST
+  function showToast(msg) { var t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(function() { t.classList.remove('show'); }, 2500); }
+
+  // INIT CAPTCHA
+  generateCaptcha();
+
+  // DEMO ENTRIES
+  var demos = [
+    { lat:47.3241, lng:8.7971, rating:1, comment:'Velostreifen endet abrupt vor der Kreuzung ohne \u00DCbergang zur Strasse.' },
+    { lat:47.3228, lng:8.8012, rating:5, comment:'Breite, gut markierte Velospur mit ausreichend Abstand zu parkierten Autos.' },
+    { lat:47.3255, lng:8.7950, rating:2, comment:'Starkes Kopfsteinpflaster, f\u00FCr Velos sehr unangenehm zu befahren.' },
+    { lat:47.3215, lng:8.8035, rating:4, comment:'Separate Veloampel mit kurzem Vorlauf, sehr sicher zum Abbiegen.' },
+    { lat:47.3248, lng:8.8000, rating:3, comment:'Schmaler Streifen, aber ausreichend f\u00FCr normales Fahren.' },
+  ];
+  demos.forEach(function(d) {
+    var entry = { id: Date.now() + Math.random(), lat: d.lat, lng: d.lng, rating: d.rating, comment: d.comment, photos: [] };
+    entries.push(entry); addMarker(entry);
+  });
+  renderSidebar(); updateHeader();
+</script>
+</body>
+</html>
