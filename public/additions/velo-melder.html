@@ -6,6 +6,7 @@
   <title>VeloMelde -- Feedback-Karte</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-draw@1.0.4/dist/leaflet.draw.min.css" />
   <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -795,6 +796,198 @@
     ::-webkit-scrollbar { width: 5px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: var(--vw-border); border-radius: 3px; }
+
+    /* VELONETZ LEGENDE */
+    .route-badge {
+      display: none;
+      position: absolute;
+      bottom: 12px;
+      left: 12px;
+      z-index: 1000;
+      flex-direction: column;
+      gap: 0;
+      background: rgba(255,255,255,0.96);
+      border: 1px solid var(--vw-border-strong);
+      border-radius: var(--vw-radius-sm);
+      padding: 8px 10px;
+      font-family: var(--vw-font-body);
+      font-size: 12px;
+      color: var(--vw-dark);
+      box-shadow: var(--vw-shadow-sm);
+      min-width: 180px;
+    }
+    .route-badge.visible { display: flex; }
+    .route-badge-title {
+      font-weight: 700;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--vw-muted);
+      margin-bottom: 7px;
+    }
+    .route-legend-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 2px 0;
+    }
+    .route-legend-row + .route-legend-row {
+      border-top: 1px solid var(--vw-border);
+      margin-top: 4px;
+      padding-top: 6px;
+    }
+    .route-legend-row--toggle { cursor: pointer; user-select: none; }
+    .route-legend-row--toggle:hover { opacity: 0.75; }
+    .route-legend-row--hidden { opacity: 0.35; }
+    .route-legend-row--hidden span { text-decoration: line-through; }
+    .route-badge-line {
+      width: 20px;
+      height: 4px;
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+    .route-badge-line--dashed {
+      background: repeating-linear-gradient(
+        90deg,
+        currentColor 0 8px,
+        transparent 8px 13px
+      );
+      height: 3px;
+    }
+
+    /* EDITOR PANEL */
+    .editor-panel {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      z-index: 1000;
+      width: 192px;
+      background: rgba(255,255,255,0.97);
+      border: 1px solid var(--vw-border-strong);
+      border-radius: var(--vw-radius-sm);
+      box-shadow: var(--vw-shadow-md);
+      font-family: var(--vw-font-body);
+      font-size: 13px;
+      color: var(--vw-dark);
+      overflow: hidden;
+    }
+    .editor-head {
+      background: var(--vw-dark);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 8px 10px;
+    }
+    .editor-section {
+      padding: 10px;
+      border-bottom: 1px solid var(--vw-border);
+    }
+    .editor-section:last-child { border-bottom: none; }
+    .editor-section-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--vw-muted);
+      margin-bottom: 7px;
+    }
+    .type-pills { display: flex; flex-direction: column; gap: 4px; }
+    .type-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 8px;
+      border-radius: var(--vw-radius-sm);
+      border: 1.5px solid var(--vw-border);
+      background: var(--vw-surface);
+      cursor: pointer;
+      font-family: var(--vw-font-body);
+      font-size: 12px;
+      color: var(--vw-dark);
+      text-align: left;
+      transition: border-color var(--vw-dur) var(--vw-ease), background var(--vw-dur);
+    }
+    .type-pill:hover { background: var(--vw-surface-2); }
+    .type-pill.active { border-color: var(--active-color, var(--vw-border-strong)); background: var(--vw-surface-2); font-weight: 500; }
+    .type-pill-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .editor-actions { display: flex; flex-direction: column; gap: 5px; }
+    .editor-btn {
+      width: 100%;
+      padding: 7px 10px;
+      min-height: 34px;
+      border-radius: var(--vw-radius-sm);
+      border: 1px solid var(--vw-border-strong);
+      background: var(--vw-surface);
+      color: var(--vw-dark);
+      font-family: var(--vw-font-body);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      text-align: left;
+      transition: background var(--vw-dur) var(--vw-ease), border-color var(--vw-dur);
+    }
+    .editor-btn:hover { background: var(--vw-surface-2); border-color: var(--vw-dark); }
+    .editor-btn.is-active { background: var(--vw-dark); color: #fff; border-color: var(--vw-dark); }
+    .editor-btn--primary { background: var(--vw-primary); color: #fff; border-color: transparent; }
+    .editor-btn--primary:hover { background: var(--vw-primary-hover); border-color: transparent; }
+    .editor-btn--primary.is-active { background: var(--vw-primary-press); border-color: transparent; }
+    .editor-btn--danger { color: var(--c1); }
+    .editor-btn--danger:hover { background: rgba(185,28,28,0.06); border-color: var(--c1); }
+    .editor-hint {
+      padding: 0 10px 8px;
+      font-size: 11px;
+      color: var(--vw-muted);
+      line-height: 1.45;
+      display: none;
+    }
+    .editor-hint.visible { display: block; }
+    .dir-options { display: flex; flex-direction: column; gap: 5px; }
+    .dir-opt {
+      display: flex; align-items: center; gap: 7px;
+      font-size: 12px; color: var(--vw-dark); cursor: pointer; padding: 2px 0;
+    }
+    .dir-opt input { accent-color: var(--vw-primary); cursor: pointer; margin: 0; }
+    .type-pill-dot--band { width: 18px; height: 8px; border-radius: 3px; }
+    .type-pill-dot--band-outlined { width: 18px; height: 8px; border-radius: 3px; background: #fff; border: 2.5px solid #64449b; box-sizing: border-box; }
+    .type-pill-dot--band-narrow { width: 18px; height: 4px; border-radius: 2px; }
+    .route-badge-line--band {
+      width: 20px; height: 8px; border-radius: 3px; opacity: 0.55; flex-shrink: 0;
+    }
+    .route-badge-line--band-outlined {
+      width: 20px; height: 8px; border-radius: 3px; background: #fff; border: 2px solid #64449b; flex-shrink: 0; box-sizing: border-box;
+    }
+    .route-badge-line--band-narrow {
+      width: 20px; height: 4px; border-radius: 2px; opacity: 0.75; flex-shrink: 0;
+    }
+    .route-badge-line--band-scaled {
+      width: 20px; height: 6px; border-radius: 3px; opacity: 0.65; flex-shrink: 0;
+    }
+
+    /* WAYPOINT LABELS (edit mode, shown on route click) */
+    .wp-marker { position: relative; }
+    .wp-label {
+      position: absolute;
+      left: 0; top: 0;
+      transform: translate(-50%, -50%);
+      background: rgba(20,20,20,0.82);
+      color: #fff;
+      font-family: monospace;
+      font-size: 9px;
+      font-weight: 700;
+      padding: 1px 4px;
+      border-radius: 3px;
+      white-space: nowrap;
+      line-height: 1.5;
+      pointer-events: none;
+      user-select: none;
+      backdrop-filter: blur(2px);
+    }
 </style>
 </head>
 <body>
@@ -817,6 +1010,48 @@
     <div class="map-toggle">
       <button class="map-toggle-btn active" id="btn-layer-street" onclick="setLayer('street', event)" type="button">Karte</button>
       <button class="map-toggle-btn" id="btn-layer-satellite" onclick="setLayer('satellite', event)" type="button">Satellit</button>
+    </div>
+    <div class="route-badge" id="route-badge"></div>
+    <div id="route-info" style="display:none;position:absolute;top:12px;right:12px;z-index:1000;background:rgba(30,30,30,0.88);color:#fff;font-family:var(--vw-font-body);font-size:12px;padding:6px 10px;border-radius:6px;pointer-events:none;white-space:nowrap;backdrop-filter:blur(4px)"></div>
+    <div class="editor-panel" id="editor-panel" style="display:none">
+      <div class="editor-head">&#x270E;&ensp;Velonetz bearbeiten</div>
+      <div class="editor-section">
+        <div class="editor-section-label">Routen-Typ</div>
+        <div class="type-pills" id="type-pills">
+          <button class="type-pill active" data-type="veloweg" type="button"><span class="type-pill-dot" style="background:#15803d"></span>Veloweg</button>
+          <button class="type-pill" data-type="velotrottoir" type="button"><span class="type-pill-dot" style="background:#65a30d"></span>Velotrottoir</button>
+          <button class="type-pill" data-type="velostreifen" type="button"><span class="type-pill-dot" style="background:#ca8a04"></span>Velostreifen</button>
+          <button class="type-pill" data-type="veloroute" type="button"><span class="type-pill-dot" style="background:#ea580c"></span>Veloroute</button>
+          <button class="type-pill" data-type="vorschlag-gelbes-band" type="button"><span class="type-pill-dot type-pill-dot--band" style="background:#ca8a04"></span>Vorschlag gelbes Band</button>
+          <button class="type-pill" data-type="kantonale-veloroute" type="button"><span class="type-pill-dot type-pill-dot--band-outlined"></span>Kantonale Veloroute</button>
+          <button class="type-pill" data-type="kantonale-hauptverbindung" type="button"><span class="type-pill-dot type-pill-dot--band" style="background:#64449b"></span>Kantonale Hauptverbindung</button>
+          <button class="type-pill" data-type="kantonale-nebenverbindung" type="button"><span class="type-pill-dot type-pill-dot--band-narrow" style="background:#64449b"></span>Kantonale Nebenverbindung</button>
+          <button class="type-pill" data-type="erschliessungsnetz" type="button"><span class="type-pill-dot" style="background:#111111"></span>Erschliessungsnetz</button>
+          <button class="type-pill" data-type="freizeitverbindung" type="button"><span class="type-pill-dot type-pill-dot--band" style="background:#38bdf8;height:6px"></span>Freizeitverbindung Veloland Schweiz</button>
+        </div>
+      </div>
+      <div class="editor-section" id="direction-section">
+        <div class="editor-section-label">Richtung</div>
+        <div class="dir-options">
+          <label class="dir-opt"><input type="radio" name="vw-dir" value="one-way" checked> Einbahn &rarr;</label>
+          <label class="dir-opt"><input type="radio" name="vw-dir" value="both-ways"> Beide Richtungen &harr;</label>
+        </div>
+      </div>
+      <div class="editor-section">
+        <div class="editor-section-label">Aktionen</div>
+        <div class="editor-actions">
+          <button class="editor-btn editor-btn--primary" id="btn-draw-route" type="button">+ Neue Route zeichnen</button>
+          <button class="editor-btn" id="btn-edit-vertices" type="button">&#x270E;&ensp;Wegpunkte bearbeiten</button>
+          <button class="editor-btn editor-btn--danger" id="btn-delete-routes" type="button">&times;&ensp;Route löschen</button>
+        </div>
+      </div>
+      <div class="editor-hint" id="editor-hint"></div>
+      <div class="editor-section">
+        <div class="editor-actions">
+          <button class="editor-btn" id="btn-download-geojson" type="button">&#x2193;&ensp;GeoJSON herunterladen</button>
+          <button class="editor-btn editor-btn--danger" id="btn-reset-storage" type="button">&#x21BA;&ensp;Zurücksetzen</button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -975,14 +1210,46 @@
 
   var entries = [], pendingLatLng = null, selectedRating = null, markers = {}, pendingPhotos = [];
 
+  // CUSTOM ROUTE TYPES
+  var ROUTE_TYPES = [
+    { key: 'veloweg',               label: 'Veloweg',               color: '#15803d', weight: 5, opacity: 0.85 },
+    { key: 'velotrottoir',          label: 'Velotrottoir',          color: '#65a30d', weight: 5, opacity: 0.85 },
+    { key: 'velostreifen',          label: 'Velostreifen',          color: '#ca8a04', weight: 5, opacity: 0.85 },
+    { key: 'veloroute',             label: 'Veloroute',             color: '#ea580c', weight: 3, opacity: 0.85, dashArray: '8 5' },
+    { key: 'vorschlag-gelbes-band',     label: 'Vorschlag gelbes Band',     color: '#ca8a04', weight: 3, opacity: 0.9,  band: true },
+    { key: 'kantonale-veloroute',       label: 'Kantonale Veloroute',       color: '#64449b', weight: 3, opacity: 0.9,  band: true, bandStyle: 'outlined' },
+    { key: 'kantonale-hauptverbindung', label: 'Kantonale Hauptverbindung', color: '#64449b', weight: 3, opacity: 0.9,  band: true },
+    { key: 'kantonale-nebenverbindung', label: 'Kantonale Nebenverbindung', color: '#64449b', weight: 3, opacity: 0.9,  band: true, bandStyle: 'narrow' },
+    { key: 'erschliessungsnetz',        label: 'Erschliessungsnetz',        color: '#111111', weight: 4, opacity: 0.85, noDirection: true },
+    { key: 'freizeitverbindung',        label: 'Freizeitverbindung Veloland Schweiz', color: '#38bdf8', weight: 3, opacity: 0.9, band: true, bandScale: 0.75 }
+  ];
+  var LS_KEY = 'vw_custom_routes';
+  var hiddenTypes = new Set();
+  var isVelonetz = false;
+
   // MAP
   var map = L.map('map', { center: [47.3235, 8.7985], zoom: 15 });
   var LAYERS = {
-    street:    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', { attribution: '&copy; <a href="https://www.esri.com/">Esri</a>', maxZoom: 19 }),
+    street:    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>', subdomains: 'abcd', maxZoom: 19 }),
     satellite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',    { attribution: '&copy; <a href="https://www.esri.com/">Esri</a>', maxZoom: 19 })
   };
   var currentLayer = 'street';
   LAYERS.street.addTo(map);
+
+  ROUTE_TYPES.forEach(function(cfg, i) {
+    var p = map.createPane('rt-' + cfg.key);
+    p.style.zIndex = 390 + i;
+    p.style.opacity = cfg.band
+      ? (cfg.bandStyle === 'outlined' ? 0.85 : cfg.bandStyle === 'narrow' ? 0.75 : 0.65)
+      : cfg.opacity;
+  });
+  // Layer order matters for z-index: band → highlight → routes → decorators
+  var bandGroup      = L.layerGroup().addTo(map);
+  var highlightGroup = L.layerGroup().addTo(map);
+  var drawnItems     = new L.FeatureGroup().addTo(map);
+  var decoratorGroup = L.layerGroup().addTo(map);
+  var waypointGroup  = L.layerGroup().addTo(map);
+  map.on('zoomend', function() { rebuildDecorators(); });
 
   function setLayer(name, evt) {
     if (evt) { evt.stopPropagation(); }
@@ -1029,7 +1296,7 @@
   var previewLayerDesktop = null;
   var currentPreviewLayer = 'street';
   var TILE_URLS = {
-    street:    'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
+    street:    'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
     satellite: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
   };
   var TILE_URL = TILE_URLS.street;
@@ -1590,6 +1857,436 @@
     entries.push(entry); addMarker(entry);
   });
   renderSidebar(); updateHeader();
+
+  // CUSTOM ROUTES — GeoJSON backed, stored in localStorage
+  function getTypeCfg(key) {
+    return ROUTE_TYPES.filter(function(t) { return t.key === key; })[0] || ROUTE_TYPES[0];
+  }
+
+  function layerStyle(key) {
+    var c = getTypeCfg(key);
+    return { color: c.color, weight: c.weight, opacity: 1, lineCap: 'round', lineJoin: 'round', dashArray: c.dashArray || null, pane: 'rt-' + key };
+  }
+
+  function flattenLatLngs(lls) {
+    if (!lls || !lls.length) return [];
+    return (lls[0] instanceof L.LatLng) ? lls : (lls[0] || []);
+  }
+
+  function buildGeoJSON() {
+    var features = [];
+    drawnItems.eachLayer(function(layer) {
+      if (!layer.getLatLngs) return;
+      var lls = flattenLatLngs(layer.getLatLngs());
+      if (lls.length < 2) return;
+      features.push({
+        type: 'Feature',
+        geometry: { type: 'LineString', coordinates: lls.map(function(ll) { return [ll.lng, ll.lat]; }) },
+        properties: (function() {
+          var t = layer.routeType || 'veloweg';
+          var p = { type: t };
+          var tcfg = getTypeCfg(t);
+          if (!tcfg.band && !tcfg.noDirection) p.direction = layer.routeDirection || 'one-way';
+          return p;
+        })()
+      });
+    });
+    return { type: 'FeatureCollection', features: features };
+  }
+
+  function saveToStorage() {
+    localStorage.setItem(LS_KEY, JSON.stringify(buildGeoJSON()));
+  }
+
+  function smoothCoords(coords, iterations) {
+    var pts = coords.slice();
+    for (var i = 0; i < (iterations || 3); i++) {
+      var next = [pts[0]];
+      for (var j = 0; j < pts.length - 1; j++) {
+        var a = pts[j], b = pts[j + 1];
+        next.push([0.75*a[0] + 0.25*b[0], 0.75*a[1] + 0.25*b[1]]);
+        next.push([0.25*a[0] + 0.75*b[0], 0.25*a[1] + 0.75*b[1]]);
+      }
+      next.push(pts[pts.length - 1]);
+      pts = next;
+    }
+    return pts;
+  }
+
+  function renderGeoJSON(geojson, smooth, hideBand) {
+    drawnItems.clearLayers();
+    if (!geojson || !geojson.features || !geojson.features.length) return;
+    var featureIdx = 0;
+    L.geoJSON(geojson, {
+      style: function(f) { return layerStyle(f.properties && f.properties.type); },
+      onEachFeature: function(f, layer) {
+        layer.routeType      = (f.properties && f.properties.type)      || 'veloweg';
+        layer.routeDirection = (f.properties && f.properties.direction) || 'one-way';
+        layer.featureIndex   = featureIdx++;
+        if (hideBand && getTypeCfg(layer.routeType).band) {
+          layer.setStyle({ opacity: 0, weight: 0 });
+        }
+        if (smooth && f.geometry && f.geometry.type === 'LineString' && f.geometry.coordinates.length > 2) {
+          var sc = smoothCoords(f.geometry.coordinates);
+          layer.setLatLngs(sc.map(function(c) { return [c[1], c[0]]; }));
+        }
+        drawnItems.addLayer(layer);
+      }
+    });
+  }
+
+  function loadCustomRoutes(onDone, smooth, hideBand) {
+    if (smooth) {
+      // Display mode: always read from file, never touch localStorage
+      var stored = localStorage.getItem(LS_KEY);
+      if (stored) {
+        try { renderGeoJSON(JSON.parse(stored), smooth, hideBand); } catch(e) {}
+        if (onDone) onDone();
+        return;
+      }
+      fetch('velo-routes.geojson')
+        .then(function(r) { return r.ok ? r.json() : null; })
+        .then(function(data) { if (data) renderGeoJSON(data, smooth, hideBand); if (onDone) onDone(); })
+        .catch(function() { if (onDone) onDone(); });
+    } else {
+      // Edit mode: always fetch the canonical file, never use localStorage cache
+      localStorage.removeItem(LS_KEY);
+      fetch('velo-routes.geojson')
+        .then(function(r) { return r.ok ? r.json() : null; })
+        .then(function(data) { if (data) { renderGeoJSON(data, smooth, hideBand); saveToStorage(); } if (onDone) onDone(); })
+        .catch(function() { if (onDone) onDone(); });
+    }
+  }
+
+  function downloadGeoJSON() {
+    var blob = new Blob([JSON.stringify(buildGeoJSON(), null, 2)], { type: 'application/geo+json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = 'velo-routes.geojson';
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a); URL.revokeObjectURL(url);
+    showToast('GeoJSON heruntergeladen.');
+  }
+
+  function buildLegend() {
+    var badge = document.getElementById('route-badge');
+    if (!badge._leafletEventsDisabled) {
+      L.DomEvent.disableClickPropagation(badge);
+      L.DomEvent.disableScrollPropagation(badge);
+      badge._leafletEventsDisabled = true;
+    }
+    badge.innerHTML = '<div class="route-badge-title">Velonetz</div>';
+    var hasAny = false;
+    drawnItems.eachLayer(function() { hasAny = true; });
+    if (!hasAny) { badge.classList.remove('visible'); return; }
+    ROUTE_TYPES.forEach(function(cfg) {
+      var found = false;
+      drawnItems.eachLayer(function(l) { if (l.routeType === cfg.key) found = true; });
+      if (!found) return;
+      var row = document.createElement('div');
+      var isHidden = hiddenTypes.has(cfg.key);
+      row.className = 'route-legend-row' +
+        (isVelonetz ? ' route-legend-row--toggle' : '') +
+        (isHidden ? ' route-legend-row--hidden' : '');
+      var line = document.createElement('div');
+      if (cfg.bandStyle === 'outlined') {
+        line.className = 'route-badge-line--band-outlined';
+      } else if (cfg.bandStyle === 'narrow') {
+        line.className = 'route-badge-line--band-narrow';
+        line.style.background = cfg.color;
+      } else if (cfg.band) {
+        line.className = cfg.bandScale ? 'route-badge-line--band-scaled' : 'route-badge-line route-badge-line--band';
+        line.style.background = cfg.color;
+      } else {
+        line.className = 'route-badge-line' + (cfg.dashArray ? ' route-badge-line--dashed' : '');
+        line.style.background = cfg.dashArray ? 'none' : cfg.color;
+        line.style.color = cfg.color;
+      }
+      var lbl = document.createElement('span'); lbl.textContent = cfg.label;
+      row.appendChild(line); row.appendChild(lbl);
+      if (isVelonetz) {
+        (function(key, r) {
+          r.addEventListener('click', function(e) {
+            L.DomEvent.stopPropagation(e);
+            if (hiddenTypes.has(key)) { hiddenTypes.delete(key); r.classList.remove('route-legend-row--hidden'); }
+            else { hiddenTypes.add(key); r.classList.add('route-legend-row--hidden'); }
+            applyTypeVisibility();
+          });
+        })(cfg.key, row);
+      }
+      badge.appendChild(row);
+    });
+    badge.classList.add('visible');
+  }
+
+  function loadScript(url, cb) {
+    var s = document.createElement('script');
+    s.src = url; s.onload = cb;
+    document.head.appendChild(s);
+  }
+
+  function bandWeight() {
+    var mpp = 40075016.686 * Math.cos(47.32 * Math.PI / 180) / Math.pow(2, map.getZoom() + 8);
+    return Math.max(6, Math.round(10 / mpp));
+  }
+
+  function rebuildDecorators() {
+    decoratorGroup.clearLayers();
+    bandGroup.clearLayers();
+    if (typeof L.polylineDecorator === 'undefined') return;
+    drawnItems.eachLayer(function(layer) {
+      if (!layer.getLatLngs) return;
+      var typeKey = layer.routeType || 'veloweg';
+      var cfg = getTypeCfg(typeKey);
+      var lls = flattenLatLngs(layer.getLatLngs());
+      if (lls.length < 2) return;
+      if (hiddenTypes.has(typeKey)) return;
+      var isBand = !!cfg.band;
+
+      if (isBand) {
+        var bw = bandWeight();
+        if (cfg.bandStyle === 'outlined') {
+          L.polyline(lls, { color: cfg.color, weight: bw, opacity: 1, lineCap: 'round', lineJoin: 'round', interactive: false, pane: 'rt-' + typeKey }).addTo(bandGroup);
+          L.polyline(lls, { color: '#ffffff', weight: Math.max(4, bw - 6), opacity: 1, lineCap: 'round', lineJoin: 'round', interactive: false, pane: 'rt-' + typeKey }).addTo(bandGroup);
+        } else if (cfg.bandStyle === 'narrow') {
+          L.polyline(lls, { color: cfg.color, weight: Math.max(3, Math.round(bw / 3)), opacity: 1, lineCap: 'round', lineJoin: 'round', interactive: false, pane: 'rt-' + typeKey }).addTo(bandGroup);
+        } else {
+          var sw = cfg.bandScale ? Math.max(3, Math.round(bw * cfg.bandScale)) : bw;
+          L.polyline(lls, { color: cfg.color, weight: sw, opacity: 1, lineCap: 'round', lineJoin: 'round', interactive: false, pane: 'rt-' + typeKey }).addTo(bandGroup);
+        }
+        return;
+      }
+      if (cfg.noDirection) return;
+
+      var dir = layer.routeDirection || 'one-way';
+      function arrow() {
+        return L.Symbol.arrowHead({
+          pixelSize: 10, headAngle: 55, polygon: false,
+          pathOptions: { color: cfg.color, weight: 2, opacity: 0.9, fill: false }
+        });
+      }
+      if (dir === 'one-way') {
+        L.polylineDecorator(layer, {
+          patterns: [{ offset: '10%', repeat: '25%', symbol: arrow() }]
+        }).addTo(decoratorGroup);
+      } else {
+        L.polylineDecorator(layer, {
+          patterns: [{ offset: '5%', repeat: '30%', symbol: arrow() }]
+        }).addTo(decoratorGroup);
+        L.polylineDecorator(L.polyline(lls.slice().reverse()), {
+          patterns: [{ offset: '20%', repeat: '30%', symbol: arrow() }]
+        }).addTo(decoratorGroup);
+      }
+    });
+  }
+
+  function showRouteInfo(layer) {
+    var el = document.getElementById('route-info');
+    var idx = layer.featureIndex !== undefined ? 'Feature #' + layer.featureIndex : 'neue Route';
+    el.textContent = idx + '  ·  ' + (layer.routeType || 'veloweg');
+    el.style.display = 'block';
+  }
+
+  function hideRouteInfo() {
+    document.getElementById('route-info').style.display = 'none';
+  }
+
+  function applyTypeVisibility() {
+    drawnItems.eachLayer(function(layer) {
+      var typeKey = layer.routeType || 'veloweg';
+      var cfg = getTypeCfg(typeKey);
+      if (!cfg.band) {
+        layer.setStyle(hiddenTypes.has(typeKey) ? { opacity: 0, weight: 0 } : layerStyle(typeKey));
+      }
+    });
+    rebuildDecorators();
+  }
+
+  // ?velonetz — display custom routes (read-only)
+  function initVeloRoutes() {
+    isVelonetz = true;
+    loadScript('https://cdn.jsdelivr.net/npm/leaflet-polylinedecorator@1.6.0/dist/leaflet.polylineDecorator.min.js', function() {
+      loadCustomRoutes(function() { rebuildDecorators(); buildLegend(); }, true, true);
+    });
+  }
+
+  // ?edit — interactive route editor
+  function setEditorHint(msg) {
+    var el = document.getElementById('editor-hint');
+    el.textContent = msg;
+    el.classList.toggle('visible', !!msg);
+  }
+
+  function initEditMode() {
+    map.off('click');
+    document.getElementById('editor-panel').style.display = 'block';
+
+    var selectedType      = 'veloweg';
+    var selectedDirection = 'one-way';
+
+    // Type pills
+    document.getElementById('type-pills').addEventListener('click', function(e) {
+      var pill = e.target.closest('.type-pill');
+      if (!pill) return;
+      document.querySelectorAll('.type-pill').forEach(function(p) {
+        p.classList.remove('active'); p.style.removeProperty('--active-color');
+      });
+      pill.classList.add('active');
+      pill.style.setProperty('--active-color', getTypeCfg(pill.dataset.type).color);
+      selectedType = pill.dataset.type;
+      var selCfg = getTypeCfg(selectedType);
+      document.getElementById('direction-section').style.display = (selCfg.band || selCfg.noDirection) ? 'none' : 'block';
+    });
+    var firstPill = document.querySelector('.type-pill.active');
+    if (firstPill) firstPill.style.setProperty('--active-color', getTypeCfg(firstPill.dataset.type).color);
+
+    // Direction radios
+    document.querySelectorAll('input[name="direction"]').forEach(function(radio) {
+      radio.addEventListener('change', function() { selectedDirection = this.value; });
+    });
+
+    document.getElementById('btn-download-geojson').addEventListener('click', downloadGeoJSON);
+
+    document.getElementById('btn-reset-storage').addEventListener('click', function() {
+      if (!confirm('Alle Routen löschen?')) return;
+      drawnItems.clearLayers();
+      decoratorGroup.clearLayers();
+      bandGroup.clearLayers();
+      saveToStorage();
+      showToast('Zurückgesetzt.');
+    });
+
+    var DECORATOR_URL = 'https://cdn.jsdelivr.net/npm/leaflet-polylinedecorator@1.6.0/dist/leaflet.polylineDecorator.min.js';
+    var DRAW_URL      = 'https://cdn.jsdelivr.net/npm/leaflet-draw@1.0.4/dist/leaflet.draw.min.js';
+
+    var libsReady = 0;
+    function onLibReady() {
+      libsReady++;
+      if (libsReady < 2) return;
+      // Both libs loaded — load routes then wire up tools
+      loadCustomRoutes(function() { rebuildDecorators(); }, false, false);
+
+      var currentDrawer = null, editHandler = null, deleteHandler = null;
+
+      function selectRoute(layer) {
+        highlightGroup.clearLayers();
+        waypointGroup.clearLayers();
+        var lls = flattenLatLngs(layer.getLatLngs());
+        if (lls.length < 2) return;
+        var cfg = getTypeCfg(layer.routeType || 'veloweg');
+        var w = cfg.band ? bandWeight() + 8 : cfg.weight + 8;
+        L.polyline(lls, {
+          color: '#ff5544', weight: w, opacity: 0.55,
+          lineCap: 'round', lineJoin: 'round', interactive: false
+        }).addTo(highlightGroup);
+        lls.forEach(function(ll, i) {
+          L.marker(ll, {
+            icon: L.divIcon({
+              className: 'wp-marker',
+              html: '<span class="wp-label">' + i + '</span>',
+              iconSize: [0, 0],
+              iconAnchor: [0, 0]
+            }),
+            interactive: false
+          }).addTo(waypointGroup);
+        });
+      }
+
+      function clearSelection() {
+        highlightGroup.clearLayers();
+        waypointGroup.clearLayers();
+        hideRouteInfo();
+      }
+
+      function stopAll() {
+        clearSelection();
+        if (currentDrawer) { currentDrawer.disable(); currentDrawer = null; }
+        if (editHandler)   { editHandler.save(); editHandler.disable(); editHandler = null; saveToStorage(); rebuildDecorators(); }
+        if (deleteHandler) { deleteHandler.save(); deleteHandler.disable(); deleteHandler = null; saveToStorage(); rebuildDecorators(); }
+        ['btn-draw-route','btn-edit-vertices','btn-delete-routes'].forEach(function(id) {
+          document.getElementById(id).classList.remove('is-active');
+        });
+        setEditorHint('');
+      }
+
+      document.getElementById('btn-draw-route').addEventListener('click', function() {
+        if (currentDrawer) { stopAll(); return; }
+        stopAll();
+        currentDrawer = new L.Draw.Polyline(map, { shapeOptions: layerStyle(selectedType) });
+        currentDrawer.enable();
+        this.classList.add('is-active');
+        setEditorHint('Punkte klicken · Doppelklick abschliessen · ESC abbrechen');
+      });
+
+      var justSelectedRoute = false;
+
+      drawnItems.on('click', function(e) {
+        if (e.layer) {
+          showRouteInfo(e.layer);
+          if (!currentDrawer && !editHandler && !deleteHandler) {
+            selectRoute(e.layer);
+            justSelectedRoute = true;
+          }
+        }
+      });
+
+      map.on('click', function() {
+        if (justSelectedRoute) { justSelectedRoute = false; return; }
+        clearSelection();
+      });
+
+      map.on('draw:created', function(e) {
+        var layer = e.layer;
+        layer.routeType      = selectedType;
+        layer.routeDirection = selectedDirection;
+        layer.setStyle(layerStyle(selectedType));
+        drawnItems.addLayer(layer);
+        saveToStorage();
+        rebuildDecorators();
+        currentDrawer = null;
+        document.getElementById('btn-draw-route').classList.remove('is-active');
+        setEditorHint('');
+        showToast('Route gespeichert.');
+      });
+
+      map.on('draw:drawstop', function() {
+        currentDrawer = null;
+        document.getElementById('btn-draw-route').classList.remove('is-active');
+        setEditorHint('');
+      });
+
+      document.getElementById('btn-edit-vertices').addEventListener('click', function() {
+        if (editHandler) { stopAll(); showToast('Änderungen gespeichert.'); return; }
+        stopAll();
+        editHandler = new L.EditToolbar.Edit(map, { featureGroup: drawnItems });
+        editHandler.enable();
+        this.classList.add('is-active');
+        setEditorHint('Punkte verschieben · Nochmals klicken zum Speichern');
+      });
+
+      document.getElementById('btn-delete-routes').addEventListener('click', function() {
+        if (deleteHandler) { stopAll(); showToast('Routen gelöscht.'); return; }
+        stopAll();
+        deleteHandler = new L.EditToolbar.Delete(map, { featureGroup: drawnItems });
+        deleteHandler.enable();
+        this.classList.add('is-active');
+        setEditorHint('Route anklicken · Nochmals klicken zum Bestätigen');
+      });
+
+      map.on('draw:edited',  function() { saveToStorage(); rebuildDecorators(); });
+      map.on('draw:deleted', function() { saveToStorage(); rebuildDecorators(); });
+    }
+
+    loadScript(DECORATOR_URL, onLibReady);
+    loadScript(DRAW_URL,      onLibReady);
+  }
+
+  var _urlParams = new URLSearchParams(window.location.search);
+  if (_urlParams.has('edit')) {
+    initEditMode();
+  } else if (_urlParams.has('velonetz')) {
+    initVeloRoutes();
+  }
 </script>
 </body>
 </html>
