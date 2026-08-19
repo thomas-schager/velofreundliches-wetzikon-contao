@@ -1,0 +1,50 @@
+name: Design tokens drift check
+
+# Design tokens (colors, spacing, type scale, radii, shadows, motion) are owned by the
+# velofreundliches-wetzikon-design-system repo, not this one. This repo vendors a copy in
+# files/themes/velo/css/colors_and_type.css's :root block. This check fails a PR when that
+# vendored copy has silently drifted from the canonical source, instead of the drift being
+# noticed months later by a human (see design-system-sharing-strategy.md in the
+# velofreundliches-wetzikon-design-system repo).
+#
+# This does NOT run at deploy time and adds no build step to the site itself -- it's CI-only.
+
+on:
+  pull_request:
+    paths:
+      - 'files/themes/velo/css/colors_and_type.css'
+  push:
+    branches: [main]
+    paths:
+      - 'files/themes/velo/css/colors_and_type.css'
+  workflow_dispatch: {}
+
+jobs:
+  check-drift:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch canonical tokens.css
+        run: |
+          curl -fsSL \
+            https://raw.githubusercontent.com/thomas-schager/velofreundliches-wetzikon-design-system/main/tokens.css \
+            -o /tmp/canonical-tokens.css
+
+      - name: Extract :root block from both files
+        run: |
+          awk '/^:root \{/,/^\}/' /tmp/canonical-tokens.css > /tmp/canonical-root.css
+          awk '/^:root \{/,/^\}/' files/themes/velo/css/colors_and_type.css > /tmp/local-root.css
+
+      - name: Diff
+        run: |
+          if ! diff -u /tmp/canonical-root.css /tmp/local-root.css; then
+            echo ""
+            echo "::error::files/themes/velo/css/colors_and_type.css's :root block has drifted"\
+                 "from the canonical tokens in velofreundliches-wetzikon-design-system (tokens.css)."\
+                 "Either the tokens repo has an unmerged change, or this file was hand-edited"\
+                 "without updating the canonical source first. Reconcile before merging --"\
+                 "see design-system-sharing-strategy.md in the velofreundliches-wetzikon-design-system repo."
+            exit 1
+          fi
+          echo "Design tokens match the canonical source."
