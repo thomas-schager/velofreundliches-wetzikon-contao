@@ -1,0 +1,156 @@
+[
+  {
+    "id": "m-1001",
+    "lat": 47.3241,
+    "lng": 8.7971,
+    "rating": 1,
+    "comment": "Velostreifen endet abrupt vor der Kreuzung ohne Übergang zur Strasse. Velofahrende müssen ohne Vorwarnung auf die Fahrbahn wechseln, das ist besonders bei Berufsverkehr sehr gefährlich.",
+    "photos": [
+      "https://picsum.photos/seed/velo-1001-1/480/360"
+    ],
+    "address": "Usterstrasse 12, Wetzikon",
+    "addressDistanceM": 8,
+    "name": "Michael Frei",
+    "anonymous": false,
+    "createdAt": "2026-06-14T09:32:00+02:00"
+  },
+  {
+    "id": "m-1002",
+    "lat": 47.3228,
+    "lng": 8.8012,
+    "rating": 5,
+    "comment": "Breite, gut markierte Velospur mit ausreichend Abstand zu parkierten Autos. So sollte es überall aussehen!",
+    "photos": [
+      "https://picsum.photos/seed/velo-1002-1/400/400",
+      "https://picsum.photos/seed/velo-1002-2/400/400",
+      "https://picsum.photos/seed/velo-1002-3/400/400"
+    ],
+    "address": "Bahnhofstrasse 4, Wetzikon",
+    "addressDistanceM": 35,
+    "name": "Sarah Meier",
+    "anonymous": false,
+    "createdAt": "2026-06-15T14:05:00+02:00"
+  },
+  {
+    "id": "m-1003",
+    "lat": 47.3255,
+    "lng": 8.795,
+    "rating": 2,
+    "comment": "Starkes Kopfsteinpflaster, für Velos sehr unangenehm zu befahren, vor allem mit Rennrad oder Anhänger.",
+    "photos": [],
+    "address": "Spitalstrasse 2, Wetzikon",
+    "addressDistanceM": 65,
+    "name": "Anonym",
+    "anonymous": true,
+    "createdAt": "2026-06-16T08:15:00+02:00"
+  },
+  {
+    "id": "m-1004",
+    "lat": 47.3215,
+    "lng": 8.8035,
+    "rating": 4,
+    "comment": "Separate Veloampel mit kurzem Vorlauf, sehr sicher zum Abbiegen. Einzig die Wartezeit könnte kürzer sein.",
+    "photos": [
+      "https://picsum.photos/seed/velo-1004-1/480/360"
+    ],
+    "address": "Rapperswilerstrasse 20, Wetzikon",
+    "addressDistanceM": 15,
+    "name": "Thomas Huber",
+    "anonymous": false,
+    "createdAt": "2026-06-17T17:42:00+02:00"
+  },
+  {
+    "id": "m-1005",
+    "lat": 47.3248,
+    "lng": 8.8,
+    "rating": 3,
+    "comment": "Der Streifen hier ist grundsätzlich in Ordnung, aber an mehreren Stellen zu schmal, sobald ein Lastwagen oder Bus entgegenkommt. Besonders morgens zur Stosszeit, wenn viele Kinder auf dem Weg zur Schule unterwegs sind, wird es eng und unübersichtlich. Ein zusätzlicher Sicherheitsabstand oder eine bauliche Trennung würde die Situation für alle spürbar entschärfen und würde ich mir für die nächste Sanierung wünschen, da die Strasse ohnehin bald erneuert werden soll.",
+    "photos": [
+      "https://picsum.photos/seed/velo-1005-1/400/400",
+      "https://picsum.photos/seed/velo-1005-2/400/400"
+    ],
+    "address": "Zürichstrasse 8, Wetzikon",
+    "addressDistanceM": 3,
+    "name": "Laura Steiner",
+    "anonymous": false,
+    "createdAt": "2026-06-18T11:20:00+02:00"
+  },
+  {
+    "id": "m-1006",
+    "lat": 47.326,
+    "lng": 8.799,
+    "rating": 1,
+    "comment": "Schlecht einsehbare Ausfahrt einer Tiefgarage direkt über den Veloweg, schon mehrmals fast touchiert worden.",
+    "photos": [
+      "https://picsum.photos/seed/velo-1006-1/480/360"
+    ],
+    "address": "Hinwilerstrasse 5, Wetzikon",
+    "addressDistanceM": 45,
+    "name": "Peter Widmer",
+    "anonymous": false,
+    "createdAt": "2026-06-19T07:55:00+02:00"
+  },
+  {
+    "id": "m-1007",
+    "lat": 47.3205,
+    "lng": 8.7965,
+    "rating": 5,
+    "comment": "Neu asphaltierter Abschnitt, sehr angenehm zu befahren und gut beleuchtet in der Dämmerung.",
+    "photos": [
+      "https://picsum.photos/seed/velo-1007-1/480/360"
+    ],
+    "address": null,
+    "addressDistanceM": null,
+    "name": "Nina Frei",
+    "anonymous": false,
+    "createdAt": "2026-06-20T13:10:00+02:00"
+  },
+  {
+    "id": "m-1008",
+    "lat": 47.3233,
+    "lng": 8.794,
+    "rating": 2,
+    "comment": "Wurzelhebungen im Belag sorgen für mehrere kleine Stufen hintereinander, unangenehm bei Nässe.",
+    "photos": [
+      "https://picsum.photos/seed/velo-1008-1/400/400",
+      "https://picsum.photos/seed/velo-1008-2/400/400",
+      "https://picsum.photos/seed/velo-1008-3/400/400"
+    ],
+    "address": "Grüningerstrasse 3, Wetzikon",
+    "addressDistanceM": 18,
+    "name": "Anonym",
+    "anonymous": true,
+    "createdAt": "2026-06-21T16:30:00+02:00"
+  },
+  {
+    "id": "m-1009",
+    "lat": 47.327,
+    "lng": 8.802,
+    "rating": 4,
+    "comment": "Grosszügige Kreuzungslösung mit eigener Vorgrünphase für Velos, funktioniert im Alltag sehr gut.",
+    "photos": [
+      "https://picsum.photos/seed/velo-1009-1/480/360"
+    ],
+    "address": "Wilstrasse 9, Wetzikon",
+    "addressDistanceM": 52,
+    "name": "David Kunz",
+    "anonymous": false,
+    "createdAt": "2026-06-22T09:05:00+02:00"
+  },
+  {
+    "id": "m-1010",
+    "lat": 47.319,
+    "lng": 8.801,
+    "rating": 3,
+    "comment": "Fahrbahn ist in Ordnung, aber die Beschilderung zur Vortrittsregelung an der Verzweigung ist verwirrend.",
+    "photos": [
+      "https://picsum.photos/seed/velo-1010-1/400/400",
+      "https://picsum.photos/seed/velo-1010-2/400/400"
+    ],
+    "address": "Forchstrasse 60, Wetzikon",
+    "addressDistanceM": 22,
+    "name": "Elena Vogel",
+    "anonymous": false,
+    "createdAt": "2026-06-23T18:45:00+02:00"
+  }
+]

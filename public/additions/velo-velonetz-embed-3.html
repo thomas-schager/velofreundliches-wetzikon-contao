@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Velonetz Wetzikon — Veloplanung</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Jost:wght@500;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    /* COMPILE:TOKENS — copied verbatim from velo-melder.html. See .claude/skills/compile-velo-views/SKILL.md */
+    :root {
+      --vw-primary:        #ff5544;
+      --vw-dark:           #3a3a3a;
+      --vw-bg:             #fafaf8;
+      --vw-surface:        #ffffff;
+      --vw-surface-2:      #f4f3ef;
+      --vw-border:         #e8e6e0;
+      --vw-border-strong:  #cfcdc6;
+      --vw-muted:          #6b6b67;
+      --vw-muted-strong:   #5e5e5a;
+      --vw-font-display:   'Jost', system-ui, sans-serif;
+      --vw-font-body:      'Roboto', system-ui, sans-serif;
+      --vw-ease:           cubic-bezier(.2,.7,.3,1);
+      --vw-dur:            180ms;
+      --vw-radius-sm:      4px;
+      --vw-radius-md:      8px;
+      --vw-radius-full:    999px;
+      --vw-shadow-sm:      0 1px 2px rgba(0,0,0,0.04);
+      --vw-shadow-md:      0 1px 2px rgba(0,0,0,0.04), 0 2px 8px rgba(0,0,0,0.04);
+    }
+    /* /COMPILE:TOKENS */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; font-family: var(--vw-font-body); font-size: 16px; line-height: 1.6; background: var(--vw-bg); color: var(--vw-dark); overflow: hidden; -webkit-font-smoothing: antialiased; }
+
+    /* HEADER */
+    header { display: flex; align-items: center; gap: 16px; padding: 0 20px; height: 52px; background: rgba(255,255,255,0.96); backdrop-filter: blur(8px); border-bottom: 1px solid var(--vw-border); flex-shrink: 0; box-shadow: var(--vw-shadow-sm); position: relative; z-index: 100; }
+    .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .logo-bar { width: 6px; height: 30px; background: var(--vw-primary); border-radius: 2px; flex-shrink: 0; }
+    .logo-text { display: flex; flex-direction: column; line-height: 1.1; }
+    .logo-top { font-family: var(--vw-font-display); font-weight: 500; font-size: 12px; color: var(--vw-dark); }
+    .logo-bottom { font-family: var(--vw-font-display); font-weight: 700; font-size: 13px; color: var(--vw-dark); letter-spacing: 0.16em; text-transform: uppercase; }
+
+    /* LAYOUT */
+    .workspace { display: flex; flex: 1; overflow: hidden; height: calc(100% - 52px); }
+    #map { flex: 1; }
+
+    /* MAP LAYER TOGGLE */
+    .map-toggle { position: absolute; top: 12px; right: 12px; z-index: 1000; display: flex; border: 1px solid var(--vw-border-strong); border-radius: var(--vw-radius-sm); overflow: hidden; box-shadow: var(--vw-shadow-md); }
+    .map-toggle-btn { padding: 10px 13px; min-height: 40px; font-family: var(--vw-font-body); font-size: 12px; font-weight: 500; background: var(--vw-surface); color: var(--vw-muted-strong); border: none; cursor: pointer; white-space: nowrap; transition: background var(--vw-dur) var(--vw-ease), color var(--vw-dur) var(--vw-ease); }
+    .map-toggle-btn + .map-toggle-btn { border-left: 1px solid var(--vw-border); }
+    .map-toggle-btn.active { background: var(--vw-dark); color: #fff; }
+    .map-toggle-btn:hover:not(.active) { background: var(--vw-surface-2); color: var(--vw-dark); }
+
+    /* LEGEND */
+    .route-badge { display: none; position: absolute; bottom: 28px; left: 12px; z-index: 1000; flex-direction: column; background: rgba(255,255,255,0.96); border: 1px solid var(--vw-border-strong); border-radius: var(--vw-radius-sm); padding: 8px 10px; font-size: 12px; color: var(--vw-dark); box-shadow: var(--vw-shadow-sm); min-width: 180px; }
+    .route-badge.visible { display: flex; }
+    .route-badge-title { font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--vw-muted); margin-bottom: 7px; }
+    .route-legend-row { display: flex; align-items: center; gap: 8px; padding: 2px 0; }
+    .route-legend-row + .route-legend-row { border-top: 1px solid var(--vw-border); margin-top: 4px; padding-top: 6px; }
+    .route-legend-row--toggle { cursor: pointer; user-select: none; }
+    .route-legend-row--toggle:hover { opacity: 0.75; }
+    .route-legend-row--hidden { opacity: 0.35; }
+    .route-legend-row--hidden span { text-decoration: line-through; }
+    .route-badge-line--band-outlined { width: 20px; height: 8px; border-radius: 3px; background: #fff; border: 2px solid #64449b; flex-shrink: 0; box-sizing: border-box; }
+    .route-badge-line--band { width: 20px; height: 8px; border-radius: 3px; opacity: 0.55; flex-shrink: 0; }
+    .route-badge-line--band-scaled { width: 20px; height: 6px; border-radius: 3px; opacity: 0.65; flex-shrink: 0; }
+
+    /* EMBED MODE (?embed=1) — chrome-stripped mini view for iframes, only Leaflet's +/- zoom control remains */
+    .is-embed header, .is-embed .map-toggle, .is-embed .route-badge { display: none !important; }
+    .is-embed .workspace { height: 100%; }
+    .is-embed #map { cursor: pointer; }
+
+    /* FRAME OVERLAY (?frame=...) — highlights the section the visitor arrived from via an embed */
+    .frame-badge {
+      display: none; position: absolute; bottom: 12px; right: 12px; z-index: 1000;
+      background: rgba(255,255,255,0.96); border: 1px solid var(--vw-border-strong); border-radius: var(--vw-radius-sm);
+      padding: 6px 10px; font-size: 12px; color: var(--vw-muted-strong); box-shadow: var(--vw-shadow-sm);
+    }
+    .frame-badge.visible { display: block; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-bar"></div>
+    <div class="logo-text">
+      <span class="logo-top">velofreundliches</span>
+      <span class="logo-bottom">Wetzikon</span>
+    </div>
+  </div>
+  <span style="font-size:13px;color:var(--vw-muted);font-family:var(--vw-font-body);margin-left:2px">Veloplanung</span>
+</header>
+
+<div class="workspace">
+  <div id="map" style="position:relative">
+    <div class="map-toggle">
+      <button class="map-toggle-btn active" id="btn-layer-street" onclick="setLayer('street',event)" type="button">Karte</button>
+      <button class="map-toggle-btn" id="btn-layer-satellite" onclick="setLayer('satellite',event)" type="button">Satellit</button>
+    </div>
+    <div class="route-badge" id="route-badge"></div>
+    <div class="frame-badge" id="frame-badge">Ausschnitt aus einer eingebetteten Karte</div>
+  </div>
+</div>
+
+<script>
+  // PER-VIEW CONFIG — ROUTE_TYPES / LEGEND_TITLE / hiddenTypes / isVelonetz are NOT copied verbatim
+  // by the compile-velo-views skill; every compiled view declares its own. See
+  // .claude/skills/compile-velo-views/SKILL.md
+  var LEGEND_TITLE = 'Veloplanung';
+  var ROUTE_TYPES = [
+    { key: 'vorschlag-gelbes-band',   label: 'Vorschlag gelbes Band',              color: '#ca8a04', weight: 3, opacity: 0.9, band: true },
+    { key: 'kantonale-veloroute',     label: 'Kantonale Veloroute',                color: '#64449b', weight: 3, opacity: 0.9, band: true, bandStyle: 'outlined' },
+    { key: 'freizeitverbindung',      label: 'Freizeitverbindung Veloland Schweiz', color: '#38bdf8', weight: 3, opacity: 0.9, band: true, bandScale: 0.75 }
+  ];
+  var hiddenTypes = new Set();
+  var isVelonetz = true;
+
+  // COMPILE:MAP-ENGINE
+  // MAP
+  var map = L.map('map', { center: [47.3235, 8.7985], zoom: 15 });
+  var LAYERS = {
+    street:    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+                 { attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>', subdomains: 'abcd', maxZoom: 19 }),
+    satellite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+                 { attribution: '&copy; <a href="https://www.esri.com/">Esri</a>', maxZoom: 19 })
+  };
+  var currentLayer = 'street';
+  LAYERS.street.addTo(map);
+
+  ROUTE_TYPES.forEach(function(cfg, i) {
+    var p = map.createPane('rt-' + cfg.key);
+    p.style.zIndex = 390 + i;
+    p.style.opacity = cfg.band
+      ? (cfg.bandStyle === 'outlined' ? 0.85 : cfg.bandStyle === 'narrow' ? 0.75 : 0.65)
+      : cfg.opacity;
+  });
+  // Layer order matters for z-index: band → highlight → routes → decorators
+  var bandGroup      = L.layerGroup().addTo(map);
+  var highlightGroup = L.layerGroup().addTo(map);
+  var drawnItems     = new L.FeatureGroup().addTo(map);
+  var decoratorGroup = L.layerGroup().addTo(map);
+  var waypointGroup  = L.layerGroup().addTo(map);
+  map.on('zoomend', function() { rebuildDecorators(); });
+
+  function setLayer(name, evt) {
+    if (evt) { evt.stopPropagation(); }
+    if (name === currentLayer) return;
+    map.removeLayer(LAYERS[currentLayer]);
+    LAYERS[name].addTo(map);
+    currentLayer = name;
+    document.getElementById('btn-layer-street').classList.toggle('active', name === 'street');
+    document.getElementById('btn-layer-satellite').classList.toggle('active', name === 'satellite');
+  }
+  // /COMPILE:MAP-ENGINE
+
+  // COMPILE:MAP-ENGINE
+  // Prevent toggle button container from bubbling clicks to the map
+  var toggleEl = document.querySelector('.map-toggle');
+  if (toggleEl) {
+    L.DomEvent.disableClickPropagation(toggleEl);
+    L.DomEvent.disableScrollPropagation(toggleEl);
+  }
+  setTimeout(function() {
+    var zoomEl = document.querySelector('.leaflet-control-zoom');
+    if (zoomEl) {
+      L.DomEvent.disableClickPropagation(zoomEl);
+    }
+  }, 0);
+  // /COMPILE:MAP-ENGINE
+
+  // COMPILE:ROUTE-RENDER
+  function getTypeCfg(key) {
+    return ROUTE_TYPES.filter(function(t) { return t.key === key; })[0] || ROUTE_TYPES[0];
+  }
+
+  function layerStyle(key) {
+    var c = getTypeCfg(key);
+    return { color: c.color, weight: c.weight, opacity: 1, lineCap: 'round', lineJoin: 'round', dashArray: c.dashArray || null, pane: 'rt-' + key };
+  }
+
+  function flattenLatLngs(lls) {
+    if (!lls || !lls.length) return [];
+    return (lls[0] instanceof L.LatLng) ? lls : (lls[0] || []);
+  }
+  // /COMPILE:ROUTE-RENDER
+
+  // COMPILE:ROUTE-RENDER
+  function smoothCoords(coords, iterations) {
+    var pts = coords.slice();
+    for (var i = 0; i < (iterations || 3); i++) {
+      var next = [pts[0]];
+      for (var j = 0; j < pts.length - 1; j++) {
+        var a = pts[j], b = pts[j + 1];
+        next.push([0.75*a[0] + 0.25*b[0], 0.75*a[1] + 0.25*b[1]]);
+        next.push([0.25*a[0] + 0.75*b[0], 0.25*a[1] + 0.75*b[1]]);
+      }
+      next.push(pts[pts.length - 1]);
+      pts = next;
+    }
+    return pts;
+  }
+
+  function renderGeoJSON(geojson, smooth, hideBand) {
+    drawnItems.clearLayers();
+    if (!geojson || !geojson.features || !geojson.features.length) return;
+    var featureIdx = 0;
+    L.geoJSON(geojson, {
+      style: function(f) { return layerStyle(f.properties && f.properties.type); },
+      onEachFeature: function(f, layer) {
+        layer.routeType = (f.properties && f.properties.type) || 'veloweg';
+        // Views declare a subset of ROUTE_TYPES (see the view registry in
+        // .claude/skills/compile-velo-views/SKILL.md) — velo-routes.geojson is shared by
+        // all of them and can contain types a given view doesn't display; skip those
+        // rather than adding a layer with no matching pane (map.createPane() only runs
+        // for this view's own ROUTE_TYPES).
+        if (!ROUTE_TYPES.some(function(t) { return t.key === layer.routeType; })) return;
+        layer.routeDirection = (f.properties && f.properties.direction) || 'one-way';
+        layer.featureIndex   = featureIdx++;
+        if (hideBand && getTypeCfg(layer.routeType).band) {
+          layer.setStyle({ opacity: 0, weight: 0 });
+        }
+        if (smooth && f.geometry && f.geometry.type === 'LineString' && f.geometry.coordinates.length > 2) {
+          var sc = smoothCoords(f.geometry.coordinates);
+          layer.setLatLngs(sc.map(function(c) { return [c[1], c[0]]; }));
+        }
+        drawnItems.addLayer(layer);
+      }
+    });
+  }
+  // /COMPILE:ROUTE-RENDER
+
+  // COMPILE:ROUTE-RENDER
+  function loadScript(url, cb) {
+    var s = document.createElement('script');
+    s.src = url; s.onload = cb;
+    document.head.appendChild(s);
+  }
+
+  function bandWeight() {
+    var mpp = 40075016.686 * Math.cos(47.32 * Math.PI / 180) / Math.pow(2, map.getZoom() + 8);
+    return Math.max(6, Math.round(10 / mpp));
+  }
+
+  function rebuildDecorators() {
+    decoratorGroup.clearLayers();
+    bandGroup.clearLayers();
+    if (typeof L.polylineDecorator === 'undefined') return;
+    drawnItems.eachLayer(function(layer) {
+      if (!layer.getLatLngs) return;
+      var typeKey = layer.routeType || 'veloweg';
+      var cfg = getTypeCfg(typeKey);
+      var lls = flattenLatLngs(layer.getLatLngs());
+      if (lls.length < 2) return;
+      if (hiddenTypes.has(typeKey)) return;
+      var isBand = !!cfg.band;
+
+      if (isBand) {
+        var bw = bandWeight();
+        if (cfg.bandStyle === 'outlined') {
+          L.polyline(lls, { color: cfg.color, weight: bw, opacity: 1, lineCap: 'round', lineJoin: 'round', interactive: false, pane: 'rt-' + typeKey }).addTo(bandGroup);
+          L.polyline(lls, { color: '#ffffff', weight: Math.max(4, bw - 6), opacity: 1, lineCap: 'round', lineJoin: 'round', interactive: false, pane: 'rt-' + typeKey }).addTo(bandGroup);
+        } else if (cfg.bandStyle === 'narrow') {
+          L.polyline(lls, { color: cfg.color, weight: Math.max(3, Math.round(bw / 3)), opacity: 1, lineCap: 'round', lineJoin: 'round', interactive: false, pane: 'rt-' + typeKey }).addTo(bandGroup);
+        } else {
+          var sw = cfg.bandScale ? Math.max(3, Math.round(bw * cfg.bandScale)) : bw;
+          L.polyline(lls, { color: cfg.color, weight: sw, opacity: 1, lineCap: 'round', lineJoin: 'round', interactive: false, pane: 'rt-' + typeKey }).addTo(bandGroup);
+        }
+        return;
+      }
+      if (cfg.noDirection) return;
+
+      var dir = layer.routeDirection || 'one-way';
+      function arrow() {
+        return L.Symbol.arrowHead({
+          pixelSize: 10, headAngle: 55, polygon: false,
+          pathOptions: { color: cfg.color, weight: 2, opacity: 0.9, fill: false }
+        });
+      }
+      if (dir === 'one-way') {
+        L.polylineDecorator(layer, {
+          patterns: [{ offset: '10%', repeat: '25%', symbol: arrow() }]
+        }).addTo(decoratorGroup);
+      } else {
+        L.polylineDecorator(layer, {
+          patterns: [{ offset: '5%', repeat: '30%', symbol: arrow() }]
+        }).addTo(decoratorGroup);
+        L.polylineDecorator(L.polyline(lls.slice().reverse()), {
+          patterns: [{ offset: '20%', repeat: '30%', symbol: arrow() }]
+        }).addTo(decoratorGroup);
+      }
+    });
+  }
+  // /COMPILE:ROUTE-RENDER
+
+  // COMPILE:ROUTE-RENDER
+  function applyTypeVisibility() {
+    drawnItems.eachLayer(function(layer) {
+      var typeKey = layer.routeType || 'veloweg';
+      var cfg = getTypeCfg(typeKey);
+      if (!cfg.band) {
+        layer.setStyle(hiddenTypes.has(typeKey) ? { opacity: 0, weight: 0 } : layerStyle(typeKey));
+      }
+    });
+    rebuildDecorators();
+  }
+  // /COMPILE:ROUTE-RENDER
+
+  // COMPILE:ROUTE-RENDER
+  function buildLegend() {
+    var badge = document.getElementById('route-badge');
+    if (!badge._leafletEventsDisabled) {
+      L.DomEvent.disableClickPropagation(badge);
+      L.DomEvent.disableScrollPropagation(badge);
+      badge._leafletEventsDisabled = true;
+    }
+    badge.innerHTML = '<div class="route-badge-title">' + LEGEND_TITLE + '</div>';
+    var hasAny = false;
+    drawnItems.eachLayer(function() { hasAny = true; });
+    if (!hasAny) { badge.classList.remove('visible'); return; }
+    ROUTE_TYPES.forEach(function(cfg) {
+      var found = false;
+      drawnItems.eachLayer(function(l) { if (l.routeType === cfg.key) found = true; });
+      if (!found) return;
+      var row = document.createElement('div');
+      var isHidden = hiddenTypes.has(cfg.key);
+      row.className = 'route-legend-row' +
+        (isVelonetz ? ' route-legend-row--toggle' : '') +
+        (isHidden ? ' route-legend-row--hidden' : '');
+      var line = document.createElement('div');
+      if (cfg.bandStyle === 'outlined') {
+        line.className = 'route-badge-line--band-outlined';
+      } else if (cfg.bandStyle === 'narrow') {
+        line.className = 'route-badge-line--band-narrow';
+        line.style.background = cfg.color;
+      } else if (cfg.band) {
+        line.className = cfg.bandScale ? 'route-badge-line--band-scaled' : 'route-badge-line route-badge-line--band';
+        line.style.background = cfg.color;
+      } else {
+        line.className = 'route-badge-line' + (cfg.dashArray ? ' route-badge-line--dashed' : '');
+        line.style.background = cfg.dashArray ? 'none' : cfg.color;
+        line.style.color = cfg.color;
+      }
+      var lbl = document.createElement('span'); lbl.textContent = cfg.label;
+      row.appendChild(line); row.appendChild(lbl);
+      if (isVelonetz) {
+        (function(key, r) {
+          r.addEventListener('click', function(e) {
+            L.DomEvent.stopPropagation(e);
+            if (hiddenTypes.has(key)) { hiddenTypes.delete(key); r.classList.remove('route-legend-row--hidden'); }
+            else { hiddenTypes.add(key); r.classList.add('route-legend-row--hidden'); }
+            applyTypeVisibility();
+          });
+        })(cfg.key, row);
+      }
+      badge.appendChild(row);
+    });
+    badge.classList.add('visible');
+  }
+  // /COMPILE:ROUTE-RENDER
+
+  // EMBED / FRAME — Velonetz-view-specific, not part of the shared compile blocks.
+  // See .claude/skills/compile-velo-views/SKILL.md, "Embeddable Velonetz mini view".
+  var qs = new URLSearchParams(window.location.search);
+
+  function parseBbox(str) {
+    if (!str) return null;
+    var p = str.split(',').map(Number);
+    if (p.length !== 4 || p.some(isNaN)) return null;
+    return L.latLngBounds([p[1], p[0]], [p[3], p[2]]); // sw, ne
+  }
+
+  function expandBoundsAroundCenter(bounds, factor) {
+    var c = bounds.getCenter();
+    var sw = bounds.getSouthWest(), ne = bounds.getNorthEast();
+    var latHalf = (ne.lat - sw.lat) * factor / 2;
+    var lngHalf = (ne.lng - sw.lng) * factor / 2;
+    return L.latLngBounds([c.lat - latHalf, c.lng - lngHalf], [c.lat + latHalf, c.lng + lngHalf]);
+  }
+
+  var embedBounds = qs.has('embed') ? parseBbox(qs.get('bbox')) : null;
+  var frameBounds = !embedBounds ? parseBbox(qs.get('frame')) : null;
+
+  if (embedBounds) {
+    document.body.classList.add('is-embed');
+    map.fitBounds(embedBounds);
+    // A true click (not a drag-pan) opens the full view in a new tab, framed on this same section.
+    map.on('click', function() {
+      window.open('velo-velonetz-embed-3.html?frame=' + qs.get('bbox'), '_blank');
+    });
+  } else if (frameBounds) {
+    L.rectangle(frameBounds, { color: '#ff5544', weight: 2, fill: false, dashArray: '6 4', interactive: false }).addTo(map);
+    document.getElementById('frame-badge').classList.add('visible');
+    map.fitBounds(expandBoundsAroundCenter(frameBounds, 2));
+  }
+
+
+  loadScript('https://cdn.jsdelivr.net/npm/leaflet-polylinedecorator@1.6.0/dist/leaflet.polylineDecorator.min.js', function() {
+    fetch('velo-routes.geojson')
+      .then(function(r) { return r.ok ? r.json() : null; })
+      .then(function(data) {
+        if (data) renderGeoJSON(data, true, true);
+        rebuildDecorators();
+        buildLegend();
+      })
+      .catch(function() { rebuildDecorators(); buildLegend(); });
+  });
+</script>
+</body>
+</html>
