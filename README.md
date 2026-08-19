@@ -33,9 +33,20 @@ Key features of the site:
 
 **Requirements:** PHP ≥ 8.1, Composer 2, MariaDB
 
+MariaDB runs locally in Docker rather than installed natively — start it first, see
+[DATABASE.md](DATABASE.md) for the full guide (Colima setup, troubleshooting, what to do if the
+container doesn't exist yet):
+
 ```bash
-git clone git@github.com:thomas-schager/velofreundliches-wetzikon.git
-cd velofreundliches-wetzikon
+colima start
+docker start velowetzikon-mariadb
+```
+
+Then the app itself:
+
+```bash
+git clone git@github.com:thomas-schager/velofreundliches-wetzikon-contao.git
+cd velofreundliches-wetzikon-contao
 
 composer install
 
@@ -65,6 +76,7 @@ deferred image resizing.
 ├── src/             # PHP content element controllers
 ├── templates/       # Twig template overrides
 ├── public/          # Web root (point your server here)
+├── DATABASE.md      # Local MariaDB (Docker) setup guide
 └── DEPLOY.md        # Deployment guide
 ```
 
