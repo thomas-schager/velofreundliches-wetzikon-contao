@@ -119,9 +119,14 @@
 
   // COMPILE:MAP-ENGINE
   // MAP
+  // CARTO_API_KEY: since 2026-08, basemaps.cartocdn.com watermarks every tile "API KEY REQUIRED"
+  // without one (CARTO is also phasing raster basemaps out in favour of vector tiles). Free key,
+  // no CARTO account needed: carto.com/basemaps/apikey -- this one is registered to the
+  // production domain; get your own if it stops working on a different host (e.g. local dev).
+  var CARTO_API_KEY = 'cb1_2wxo_1_5095e615a6275239af744999';
   var map = L.map('map', { center: [47.3235, 8.7985], zoom: 15 });
   var LAYERS = {
-    street:    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+    street:    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?key=' + CARTO_API_KEY,
                  { attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>', subdomains: 'abcd', maxZoom: 19 }),
     satellite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
                  { attribution: '&copy; <a href="https://www.esri.com/">Esri</a>', maxZoom: 19 })

@@ -262,7 +262,6 @@ JS array.
 | `key` | Label (de) | Color | Weight | Band? | Band style | Notes |
 |---|---|---|---|---|---|---|
 | `veloweg` | Veloweg | `#15803d` | 5 | — | — | Plain line, direction-aware |
-| `velotrottoir` | Velotrottoir | `#65a30d` | 5 | — | — | Plain line, direction-aware |
 | `velostreifen` | Velostreifen | `#ca8a04` | 5 | — | — | Plain line, direction-aware |
 | `veloroute` | Veloroute | `#ea580c` | 3 | — | — | Dashed (`8 5`), direction-aware |
 | `vorschlag-gelbes-band` | Vorschlag gelbes Band | `#ca8a04` | 3 (base) | yes | plain | Rendered as a wide, ~10m-real-world-width translucent band (opacity 0.65), not a thin line — this is the project's own "yellow band" campaign proposal overlay, present in **28 of the 35** live features |

@@ -1120,7 +1120,6 @@
         <div class="editor-section-label">Routen-Typ</div>
         <div class="type-pills" id="type-pills">
           <button class="type-pill active" data-type="veloweg" type="button"><span class="type-pill-dot" style="background:#15803d"></span>Veloweg</button>
-          <button class="type-pill" data-type="velotrottoir" type="button"><span class="type-pill-dot" style="background:#65a30d"></span>Velotrottoir</button>
           <button class="type-pill" data-type="velostreifen" type="button"><span class="type-pill-dot" style="background:#ca8a04"></span>Velostreifen</button>
           <button class="type-pill" data-type="veloroute" type="button"><span class="type-pill-dot" style="background:#ea580c"></span>Veloroute</button>
           <button class="type-pill" data-type="vorschlag-gelbes-band" type="button"><span class="type-pill-dot type-pill-dot--band" style="background:#ca8a04"></span>Vorschlag gelbes Band</button>
@@ -1254,7 +1253,7 @@
       <div class="form-section">
         <label class="field-label" for="name-input">Name <span class="field-optional">(optional)</span></label>
         <input type="text" id="name-input" placeholder="Name" autocomplete="name" aria-describedby="name-note" />
-        <p class="field-note" id="name-note">Wenn du m&#xF6;chtest, wird dieser Name bei der Meldung angezeigt. Das Feld kann leer bleiben, ein Name gibt jedoch Gewicht.</p>
+        <p class="field-note" id="name-note">Dieser Name wird bei der Meldung angezeigt. Das Feld kann leer bleiben, ein Name gibt jedoch Gewicht.</p>
       </div>
 
       <div class="form-section">
@@ -1375,7 +1374,6 @@
   var LEGEND_TITLE = 'Velonetz';
   var ROUTE_TYPES = [
     { key: 'veloweg',               label: 'Veloweg',               color: '#15803d', weight: 5, opacity: 0.85 },
-    { key: 'velotrottoir',          label: 'Velotrottoir',          color: '#65a30d', weight: 5, opacity: 0.85 },
     { key: 'velostreifen',          label: 'Velostreifen',          color: '#ca8a04', weight: 5, opacity: 0.85 },
     { key: 'veloroute',             label: 'Veloroute',             color: '#ea580c', weight: 3, opacity: 0.85, dashArray: '8 5' },
     { key: 'vorschlag-gelbes-band',     label: 'Vorschlag gelbes Band',     color: '#ca8a04', weight: 3, opacity: 0.9,  band: true },
@@ -1391,9 +1389,14 @@
 
   // COMPILE:MAP-ENGINE
   // MAP
+  // CARTO_API_KEY: since 2026-08, basemaps.cartocdn.com watermarks every tile "API KEY REQUIRED"
+  // without one (CARTO is also phasing raster basemaps out in favour of vector tiles). Free key,
+  // no CARTO account needed: carto.com/basemaps/apikey -- this one is registered to the
+  // production domain; get your own if it stops working on a different host (e.g. local dev).
+  var CARTO_API_KEY = 'cb1_2wxo_1_5095e615a6275239af744999';
   var map = L.map('map', { center: [47.3235, 8.7985], zoom: 15 });
   var LAYERS = {
-    street:    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>', subdomains: 'abcd', maxZoom: 19 }),
+    street:    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?key=' + CARTO_API_KEY, { attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>', subdomains: 'abcd', maxZoom: 19 }),
     satellite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',    { attribution: '&copy; <a href="https://www.esri.com/">Esri</a>', maxZoom: 19 })
   };
   var currentLayer = 'street';
@@ -1463,7 +1466,7 @@
   var previewLayerDesktop = null;
   var currentPreviewLayer = 'street';
   var TILE_URLS = {
-    street:    'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+    street:    'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?key=' + CARTO_API_KEY,
     satellite: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
   };
   var TILE_URL = TILE_URLS.street;
