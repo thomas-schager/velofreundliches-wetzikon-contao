@@ -57,7 +57,7 @@ $GLOBALS['TL_DCA']['tl_content']['fields']['velo_eyebrow'] = [
 $GLOBALS['TL_DCA']['tl_content']['fields']['velo_lead'] = [
     'label'     => ['Lead-Text', 'Einleitungstext unter der Überschrift'],
     'inputType' => 'textarea',
-    'eval'      => ['rte' => false, 'rows' => 3, 'tl_class' => 'clr'],
+    'eval'      => ['rows' => 3, 'tl_class' => 'clr'],
     'sql'       => 'text NULL',
 ];
 
