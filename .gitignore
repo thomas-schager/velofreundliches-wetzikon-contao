@@ -24,6 +24,10 @@
 /files/*
 !/files/themes/
 
+# Deploy secrets/paths -- see deploy/deploy.env.example
+/deploy/deploy.env
+/deploy/env-local/
+
 # OS and tooling
 .DS_Store
 .claude/
