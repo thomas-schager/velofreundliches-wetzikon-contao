@@ -1,0 +1,101 @@
+{# velo_gallery content element — simple photo gallery: main photo + thumbnail strip, with a
+   click-to-enlarge lightbox. Same main+thumbnails pattern as VeloWetzikon_Backend's
+   .detail-gallery (velomelder-gelbes-band.html), adapted to this site's own tokens --
+   see design-system/tokens.html#gallery in the design-tokens repo for the documented pattern. #}
+{% extends '@Contao/content_element/_base.html.twig' %}
+
+{% set _headline = headline.text %}
+{% set headline = {text: '', tagName: 'h2'} %}
+
+{% block content %}
+{% if images %}
+<section class="vw-gallery">
+    <div class="vw-container">
+        {% if _headline %}<h2>{{ _headline }}</h2>{% endif %}
+
+        <div class="vw-gallery__body">
+            <div class="vw-gallery__main-wrap">
+                <img class="vw-gallery__main" id="vw-gallery-main-{{ data.id }}"
+                     src="{{ images[0].src }}" alt="{{ images[0].alt }}"
+                     loading="lazy" decoding="async">
+            </div>
+            {% if images|length > 1 %}
+                <div class="vw-gallery__thumbs" id="vw-gallery-thumbs-{{ data.id }}">
+                    {% for img in images %}
+                        <button type="button" class="vw-gallery__thumb{{ loop.first ? ' active' : '' }}" data-index="{{ loop.index0 }}" aria-label="Foto {{ loop.index }} anzeigen">
+                            <img src="{{ img.src }}" alt="{{ img.alt }}" loading="lazy" decoding="async">
+                        </button>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <dialog class="vw-lightbox" id="vw-gallery-lightbox-{{ data.id }}">
+        <button type="button" class="vw-lightbox__close" data-action="close" aria-label="Schliessen">
+            <i data-lucide="x" width="20" height="20" aria-hidden="true"></i>
+        </button>
+        {% if images|length > 1 %}
+            <button type="button" class="vw-lightbox__nav vw-lightbox__nav--prev" data-action="prev" aria-label="Vorheriges Foto">
+                <i data-lucide="chevron-left" width="24" height="24" aria-hidden="true"></i>
+            </button>
+            <button type="button" class="vw-lightbox__nav vw-lightbox__nav--next" data-action="next" aria-label="Nächstes Foto">
+                <i data-lucide="chevron-right" width="24" height="24" aria-hidden="true"></i>
+            </button>
+        {% endif %}
+        <img class="vw-lightbox__img" id="vw-gallery-lightbox-img-{{ data.id }}" src="" alt="">
+    </dialog>
+</section>
+
+<script>
+(function () {
+    var images = {{ images|json_encode|raw }};
+    var current = 0;
+    var mainImg = document.getElementById('vw-gallery-main-{{ data.id }}');
+    var thumbsWrap = document.getElementById('vw-gallery-thumbs-{{ data.id }}');
+    var lightbox = document.getElementById('vw-gallery-lightbox-{{ data.id }}');
+    var lightboxImg = document.getElementById('vw-gallery-lightbox-img-{{ data.id }}');
+    if (!mainImg || !lightbox || !lightboxImg) { return; }
+
+    function show(index) {
+        current = (index + images.length) % images.length;
+        var img = images[current];
+        mainImg.src = img.src;
+        mainImg.alt = img.alt;
+        if (thumbsWrap) {
+            thumbsWrap.querySelectorAll('.vw-gallery__thumb').forEach(function (btn, i) {
+                btn.classList.toggle('active', i === current);
+            });
+        }
+    }
+
+    function openLightbox(index) {
+        show(index);
+        lightboxImg.src = images[current].src;
+        lightboxImg.alt = images[current].alt;
+        lightbox.showModal();
+    }
+
+    mainImg.addEventListener('click', function () { openLightbox(current); });
+    mainImg.style.cursor = 'pointer';
+
+    if (thumbsWrap) {
+        thumbsWrap.querySelectorAll('.vw-gallery__thumb').forEach(function (btn) {
+            btn.addEventListener('click', function () { show(parseInt(btn.dataset.index, 10)); });
+        });
+    }
+
+    lightbox.addEventListener('click', function (e) {
+        var action = e.target.closest('[data-action]');
+        if (!action) {
+            if (e.target === lightbox) { lightbox.close(); }
+            return;
+        }
+        if (action.dataset.action === 'close') { lightbox.close(); }
+        if (action.dataset.action === 'prev') { current = (current - 1 + images.length) % images.length; lightboxImg.src = images[current].src; lightboxImg.alt = images[current].alt; show(current); }
+        if (action.dataset.action === 'next') { current = (current + 1) % images.length; lightboxImg.src = images[current].src; lightboxImg.alt = images[current].alt; show(current); }
+    });
+})();
+</script>
+{% endif %}
+{% endblock %}

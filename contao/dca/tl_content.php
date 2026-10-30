@@ -43,6 +43,26 @@ $GLOBALS['TL_DCA']['tl_content']['palettes']['velo_tabs'] =
     '{tabs_legend},velo_tabs;'.
     '{invisible_legend:hide},invisible,start,stop';
 
+$GLOBALS['TL_DCA']['tl_content']['palettes']['velo_gallery'] =
+    '{type_legend},type,headline;'.
+    '{images_legend},velo_gallery_images;'.
+    '{invisible_legend:hide},invisible,start,stop';
+
+$GLOBALS['TL_DCA']['tl_content']['palettes']['velo_feature_photo'] =
+    '{type_legend},type,headline;'.
+    '{content_legend},velo_eyebrow,velo_fp_text;'.
+    '{image_legend},velo_fp_image,velo_fp_alt;'.
+    '{invisible_legend:hide},invisible,start,stop';
+
+$GLOBALS['TL_DCA']['tl_content']['palettes']['velo_park_test'] =
+    '{type_legend},type,headline,velo_lead;'.
+    '{highlights_legend},velo_pt_highlights;'.
+    '{explanation_legend},velo_pt_explanation;'.
+    '{note_legend},velo_pt_note;'.
+    '{criteria_legend},velo_pt_crit_access,velo_pt_crit_steps_entrance,velo_pt_crit_steps_carts,velo_pt_crit_trailer_space,velo_pt_crit_free_spaces,velo_pt_crit_weather;'.
+    '{map_legend},velo_pt_address,velo_pt_lat,velo_pt_lng;'.
+    '{invisible_legend:hide},invisible,start,stop';
+
 // ============================================================
 // Fields shared across multiple elements
 // ============================================================
@@ -228,4 +248,168 @@ $GLOBALS['TL_DCA']['tl_content']['fields']['velo_tabs'] = [
         'tl_class' => 'clr',
     ],
     'sql'  => 'blob NULL',
+];
+
+// ============================================================
+// velo_park_test specific — "Veloparkplätze"-style test reports
+// (standalone section: besonderheiten highlights + explanation in the main column,
+// note/criteria/map summarized in a wide sidebar card — see velo_park_test.html.twig)
+// ============================================================
+
+$GLOBALS['TL_DCA']['tl_content']['fields']['velo_pt_highlights'] = [
+    'label'     => ['Besonderheiten', 'Stichpunkte mit Einordnung: + (positiv), ~ (teils), – (negativ)'],
+    'inputType' => 'multiColumnWizard',
+    'eval'      => [
+        'minCount'     => 1,
+        'columnFields' => [
+            'sentiment' => [
+                'label'     => 'Einordnung',
+                'inputType' => 'select',
+                'options'   => ['positive' => '+ positiv', 'neutral' => '~ teils', 'negative' => '– negativ'],
+                'eval'      => ['style' => 'width:110px'],
+            ],
+            'text' => [
+                'label'     => 'Text',
+                'inputType' => 'text',
+                'eval'      => ['style' => 'width:420px'],
+            ],
+        ],
+        'tl_class' => 'clr',
+    ],
+    'sql'  => 'blob NULL',
+];
+
+$GLOBALS['TL_DCA']['tl_content']['fields']['velo_pt_explanation'] = [
+    'label'     => ['Erläuterung', 'Freitext unter den Besonderheiten (Notenberechnung, Hintergrund, Links)'],
+    'inputType' => 'textarea',
+    'eval'      => ['rte' => 'tinyMCE', 'tl_class' => 'clr'],
+    'sql'       => 'text NULL',
+];
+
+$GLOBALS['TL_DCA']['tl_content']['fields']['velo_pt_note'] = [
+    'label'     => ['Note', 'Schulnote 1–6, bis zu 2 Nachkommastellen (z.B. 4.75) — kein Bindestrich/Bereich'],
+    'inputType' => 'text',
+    'eval'      => ['maxlength' => 4, 'tl_class' => 'w50'],
+    'sql'       => "varchar(4) NOT NULL default ''",
+];
+
+$GLOBALS['TL_DCA']['tl_content']['fields']['velo_pt_crit_access'] = [
+    'label'     => ['Erreichbarkeit, Anfahrt', ''],
+    'inputType' => 'select',
+    'options'   => ['gut' => 'gut', 'mittel' => 'mittel', 'schlecht' => 'schlecht'],
+    'eval'      => ['tl_class' => 'w50'],
+    'sql'       => "varchar(16) NOT NULL default ''",
+];
+
+$GLOBALS['TL_DCA']['tl_content']['fields']['velo_pt_crit_steps_entrance'] = [
+    'label'     => ['Schritte bis zum Eingang', ''],
+    'inputType' => 'select',
+    'options'   => ['lt50' => '<50', '50-100' => '50-100', '100plus' => '100+'],
+    'eval'      => ['tl_class' => 'w50'],
+    'sql'       => "varchar(16) NOT NULL default ''",
+];
+
+$GLOBALS['TL_DCA']['tl_content']['fields']['velo_pt_crit_steps_carts'] = [
+    'label'     => ['Schritte bis zu den Einkaufswagen', ''],
+    'inputType' => 'select',
+    'options'   => ['lt50' => '<50', '50-100' => '50-100', '100plus' => '100+'],
+    'eval'      => ['tl_class' => 'w50'],
+    'sql'       => "varchar(16) NOT NULL default ''",
+];
+
+$GLOBALS['TL_DCA']['tl_content']['fields']['velo_pt_crit_trailer_space'] = [
+    'label'     => ['Platz für Veloanhänger & Cargobikes', ''],
+    'inputType' => 'select',
+    'options'   => ['ja' => 'ja', 'knapp' => 'knapp', 'nein' => 'nein'],
+    'eval'      => ['tl_class' => 'w50'],
+    'sql'       => "varchar(16) NOT NULL default ''",
+];
+
+$GLOBALS['TL_DCA']['tl_content']['fields']['velo_pt_crit_free_spaces'] = [
+    'label'     => ['Ausreichend Plätze während Stosszeiten', ''],
+    'inputType' => 'select',
+    'options'   => ['ja' => 'ja', 'teils' => 'teils', 'nein' => 'nein'],
+    'eval'      => ['tl_class' => 'w50'],
+    'sql'       => "varchar(16) NOT NULL default ''",
+];
+
+$GLOBALS['TL_DCA']['tl_content']['fields']['velo_pt_crit_weather'] = [
+    'label'     => ['Wettergeschützte Velo-Parkplätze', ''],
+    'inputType' => 'select',
+    'options'   => ['ja' => 'ja', 'wenige' => 'wenige', 'nein' => 'nein'],
+    'eval'      => ['tl_class' => 'w50'],
+    'sql'       => "varchar(16) NOT NULL default ''",
+];
+
+$GLOBALS['TL_DCA']['tl_content']['fields']['velo_pt_address'] = [
+    'label'     => ['Adresse', 'Beschriftung über der Karte'],
+    'inputType' => 'text',
+    'eval'      => ['maxlength' => 255, 'tl_class' => 'w50'],
+    'sql'       => "varchar(255) NOT NULL default ''",
+];
+
+$GLOBALS['TL_DCA']['tl_content']['fields']['velo_pt_lat'] = [
+    'label'     => ['Breitengrad (lat)', 'Dezimalgrad, z.B. 47.3280714'],
+    'inputType' => 'text',
+    'eval'      => ['maxlength' => 20, 'tl_class' => 'w50'],
+    'sql'       => "varchar(20) NOT NULL default ''",
+];
+
+$GLOBALS['TL_DCA']['tl_content']['fields']['velo_pt_lng'] = [
+    'label'     => ['Längengrad (lng)', 'Dezimalgrad, z.B. 8.7961513'],
+    'inputType' => 'text',
+    'eval'      => ['maxlength' => 20, 'tl_class' => 'w50'],
+    'sql'       => "varchar(20) NOT NULL default ''",
+];
+
+// ============================================================
+// velo_gallery specific — simple photo gallery (main photo + thumbnail strip + lightbox)
+// ============================================================
+
+$GLOBALS['TL_DCA']['tl_content']['fields']['velo_gallery_images'] = [
+    'label'     => ['Fotos', 'Mindestens 2 Fotos. Reihenfolge per Drag & Drop.'],
+    'inputType' => 'multiColumnWizard',
+    'eval'      => [
+        'minCount'     => 2,
+        'columnFields' => [
+            'src' => [
+                'label'     => 'Foto',
+                'inputType' => 'fileTree',
+                'eval'      => ['filesOnly' => true, 'fieldType' => 'radio', 'mandatory' => true, 'style' => 'width:300px'],
+            ],
+            'alt' => [
+                'label'     => 'Alt-Text',
+                'inputType' => 'text',
+                'eval'      => ['style' => 'width:300px'],
+            ],
+        ],
+        'tl_class' => 'clr',
+    ],
+    'sql'  => 'blob NULL',
+];
+
+// ============================================================
+// velo_feature_photo specific — standout, narrower photo+text card (photo left, text right
+// on wider screens; stacks on mobile)
+// ============================================================
+
+$GLOBALS['TL_DCA']['tl_content']['fields']['velo_fp_image'] = [
+    'label'     => ['Foto', ''],
+    'inputType' => 'fileTree',
+    'eval'      => ['filesOnly' => true, 'fieldType' => 'radio', 'mandatory' => true, 'tl_class' => 'clr'],
+    'sql'       => 'binary(16) NULL',
+];
+
+$GLOBALS['TL_DCA']['tl_content']['fields']['velo_fp_alt'] = [
+    'label'     => ['Alt-Text', ''],
+    'inputType' => 'text',
+    'eval'      => ['maxlength' => 255, 'tl_class' => 'w50'],
+    'sql'       => "varchar(255) NOT NULL default ''",
+];
+
+$GLOBALS['TL_DCA']['tl_content']['fields']['velo_fp_text'] = [
+    'label'     => ['Text', '2-3 Abschnitte oder eine Liste'],
+    'inputType' => 'textarea',
+    'eval'      => ['rte' => 'tinyMCE', 'tl_class' => 'clr'],
+    'sql'       => 'text NULL',
 ];

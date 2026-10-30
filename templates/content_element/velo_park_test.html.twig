@@ -1,0 +1,133 @@
+{# velo_park_test content element — "Veloparkplätze"-style test report.
+   Main column: heading + lead, besonderheiten highlights, free-text explanation, alongside the
+   card on desktop. On mobile: heading -> lead -> highlights -> card -> explanation -- the
+   besonderheiten (+/~/-) read as part of the quick-glance summary above the card, while the
+   longer free-text explanation stays below it. See the four-area grid in .vw-parktest__grid. #}
+{% extends '@Contao/content_element/_base.html.twig' %}
+
+{# Suppress the base template's own auto-rendered headline (it would otherwise render above
+   our custom wrapper) and place it ourselves, inside .vw-parktest__main -- same pattern as
+   velo_join.html.twig / velo_newsletter.html.twig. #}
+{% set _headline = headline.text %}
+{% set headline = {text: '', tagName: 'h2'} %}
+
+{% block content %}
+<section class="vw-parktest">
+    <div class="vw-container vw-parktest__grid">
+        <div class="vw-parktest__lead-block">
+            {% if _headline %}<h2>{{ _headline }}</h2>{% endif %}
+            {% if lead %}<p class="vw-lead vw-parktest__lead">{{ lead }}</p>{% endif %}
+        </div>
+
+        {% if highlights %}
+            <div class="vw-parktest__highlights-block">
+                <ul class="vw-highlight-list">
+                    {% for item in highlights %}
+                        {% if item.text %}
+                            <li class="vw-highlight-list__item vw-highlight-list__item--{{ item.sentiment }}">
+                                <span class="vw-highlight-list__mark" aria-hidden="true">
+                                    <i data-lucide="{{ item.sentiment == 'positive' ? 'check' : (item.sentiment == 'negative' ? 'x' : 'minus') }}" width="20" height="20"></i>
+                                </span>
+                                <span>{{ item.text }}</span>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+
+        <aside class="vw-card vw-card--campaign vw-parktest__card">
+            {% if note %}
+                <div class="vw-parktest__note">
+                    <span class="vw-parktest__note-label">Note</span>
+                    <span class="vw-parktest__note-value" style="color:{{ note_color }};">{{ note }}</span>
+                </div>
+            {% endif %}
+
+            {% for group in criteria_groups %}
+                <div class="vw-parktest__criteria-group">
+                    <span class="vw-parktest__criteria-group-label">{{ group.label }}</span>
+                    <ul class="vw-parktest__criteria">
+                        {% for c in group.items %}
+                            {% if c.value %}
+                                <li><span>{{ c.label }}</span><strong>{{ c.value }}</strong></li>
+                            {% endif %}
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endfor %}
+
+            {% if lat and lng %}
+                <div class="vw-parktest__map-wrap">
+                    <div class="vw-parktest__map" id="vw-pt-map-{{ data.id }}" data-lat="{{ lat }}" data-lng="{{ lng }}" role="img" aria-label="Standortkarte{% if address %}: {{ address }}{% endif %}"></div>
+                    {# Same street/satellite toggle as the VeloMelder maps in VeloWetzikon_Backend
+                       (.preview-map-toggle/.preview-toggle-btn there) -- see setParkTestLayer()
+                       in the script block below. #}
+                    <div class="vw-parktest__map-toggle" id="vw-pt-map-toggle-{{ data.id }}">
+                        <button class="vw-parktest__map-toggle-btn active" data-layer="street" type="button">Karte</button>
+                        <button class="vw-parktest__map-toggle-btn" data-layer="satellite" type="button">Satellit</button>
+                    </div>
+                </div>
+                {% if address %}<p class="vw-parktest__address">{{ address }}</p>{% endif %}
+            {% endif %}
+        </aside>
+
+        {% if explanation %}
+            <div class="vw-parktest__explanation-block">
+                <div class="vw-parktest__explanation">{{ explanation|raw }}</div>
+            </div>
+        {% endif %}
+    </div>
+</section>
+
+{% if lat and lng %}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    <script>
+    (function () {
+        var el = document.getElementById('vw-pt-map-{{ data.id }}');
+        if (!el || typeof L === 'undefined') { return; }
+        var lat = parseFloat(el.dataset.lat);
+        var lng = parseFloat(el.dataset.lng);
+        /* Same fixed-location, no-pan preview-map config as the VeloMelder report detail map
+           (design-system/map.html, VeloWetzikon_Backend's velomelder-gelbes-band.html) -- this
+           is a static point, not a route, so panning/keyboard/box-zoom all stay off. */
+        var map = L.map(el, {
+            center: [lat, lng], zoom: 16, zoomSnap: 0,
+            zoomControl: false, attributionControl: false, dragging: false,
+            scrollWheelZoom: 'center', touchZoom: 'center', doubleClickZoom: 'center',
+            boxZoom: false, keyboard: false
+        });
+        /* Same two tile layers as the Backend's TILE_URLS (velomelder-gelbes-band.html). */
+        var TILE_URLS = {
+            street: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?key=cb1_2wxo_1_5095e615a6275239af744999',
+            satellite: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+        };
+        var TILE_ATTR = {
+            street: '&copy; OpenStreetMap contributors &copy; CARTO',
+            satellite: '&copy; Esri'
+        };
+        var currentLayer = L.tileLayer(TILE_URLS.street, { attribution: TILE_ATTR.street, subdomains: 'abcd', maxZoom: 19 }).addTo(map);
+
+        var pinSvg = '<svg viewBox="0 0 24 32" xmlns="http://www.w3.org/2000/svg">'
+            + '<path d="M12 0C5.37 0 0 5.37 0 12c0 8.5 12 20 12 20S24 20.5 24 12C24 5.37 18.63 0 12 0z" fill="#dc3406"/>'
+            + '<circle cx="12" cy="12" r="5" fill="rgba(255,255,255,0.35)"/></svg>';
+        var icon = L.divIcon({ html: '<div class="vw-parktest-pin">' + pinSvg + '</div>', iconSize: [24, 32], iconAnchor: [12, 32], popupAnchor: [0, -34], className: '' });
+        L.marker([lat, lng], { icon: icon }).addTo(map);
+
+        var toggle = document.getElementById('vw-pt-map-toggle-{{ data.id }}');
+        if (toggle) {
+            toggle.addEventListener('click', function (e) {
+                var btn = e.target.closest('.vw-parktest__map-toggle-btn');
+                if (!btn || btn.classList.contains('active')) { return; }
+                toggle.querySelectorAll('.vw-parktest__map-toggle-btn').forEach(function (b) { b.classList.remove('active'); });
+                btn.classList.add('active');
+                var name = btn.dataset.layer;
+                map.removeLayer(currentLayer);
+                currentLayer = L.tileLayer(TILE_URLS[name], { attribution: TILE_ATTR[name], subdomains: 'abcd', maxZoom: 19 }).addTo(map);
+            });
+        }
+    })();
+    </script>
+{% endif %}
+{% endblock %}
