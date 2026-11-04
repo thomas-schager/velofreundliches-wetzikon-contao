@@ -38,6 +38,15 @@ $GLOBALS['TL_DCA']['tl_content']['palettes']['velo_newsletter'] =
     '{benefits_legend},velo_benefits;'.
     '{invisible_legend:hide},invisible,start,stop';
 
+// Lighter, shorter alternative to velo_newsletter -- inline banner instead of a full dark
+// section (chosen from 3 drafts compared in /tmp, see the design-tokens repo discussion).
+// Trial element for one page: fully fixed, no editable content fields at all -- headline, text
+// and the form are hardcoded directly in the template (see velo_newsletter_compact.html.twig)
+// rather than configurable per instance. Only the technical fields (publish/schedule) remain.
+$GLOBALS['TL_DCA']['tl_content']['palettes']['velo_newsletter_compact'] =
+    '{type_legend},type;'.
+    '{invisible_legend:hide},invisible,start,stop';
+
 $GLOBALS['TL_DCA']['tl_content']['palettes']['velo_tabs'] =
     '{type_legend},type;'.
     '{tabs_legend},velo_tabs;'.

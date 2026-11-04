@@ -1,0 +1,30 @@
+{# velo_newsletter_compact content element — lighter, shorter alternative to velo_newsletter
+   ("Draft 1 / Kompakter Inline-Banner" from a 3-way comparison, see the design-tokens repo).
+   Single row on wider screens (icon · text · form), wraps to icon+text then form on mobile.
+   Light --color-surface-2 background, no border/shadow -- reads as a quiet inline banner that
+   sits in the page flow instead of a full dark attention-grabbing section like velo_newsletter.
+   Red envelope icon makes the "this is about email" purpose obvious at a glance.
+
+   Fully fixed trial element: no editable fields (see the DCA palette), headline/text/form are
+   hardcoded right here instead of read from the model -- editors can only place or remove the
+   whole element, not change its content. The headline field is left empty on the model (so the
+   base template's own automatic headline_component never fires, see _base.html.twig's
+   `{% if headline.text %}`) and this template owns the heading markup directly instead. #}
+{% extends '@Contao/content_element/_base.html.twig' %}
+
+{% block content %}
+<section class="vw-newsletter-compact">
+    <div class="vw-newsletter-compact__row">
+        <div class="vw-newsletter-compact__icon" aria-hidden="true">
+            <i data-lucide="mail" width="22" height="22"></i>
+        </div>
+        <div class="vw-newsletter-compact__text">
+            <h2>Bleib auf dem Laufenden</h2>
+            <p>Veloanlässe, Politisches und was sich in Wetzikon verändert — 10× im Jahr, direkt in dein Postfach.</p>
+        </div>
+        <div class="vw-newsletter-compact__form">
+            {{ insert_tag('insert_form::4')|raw }}
+        </div>
+    </div>
+</section>
+{% endblock %}
