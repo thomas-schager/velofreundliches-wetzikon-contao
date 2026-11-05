@@ -11,6 +11,7 @@
 /assets/
 /public/*
 !/public/additions/
+!/public/router.php
 /system/*
 !/system/config/
 /system/config/localconfig.php

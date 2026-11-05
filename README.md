@@ -56,8 +56,13 @@ cp .env .env.local
 php bin/console contao:migrate --no-interaction
 php bin/console contao:user:create
 
-php -S localhost:8000 -t public/
+php -S localhost:8000 -t public public/router.php
 ```
+
+The `public/router.php` argument matters: without it, PHP's built-in server never hands requests
+for not-yet-existing files (e.g. Contao's deferred/on-the-fly generated image resizes under
+`/assets/images/`) over to Contao at all, so they 404 immediately instead of being generated —
+this also breaks backend file-picker thumbnails.
 
 Open `http://localhost:8000` — frontend.  
 Open `http://localhost:8000/contao` — Contao backend.
