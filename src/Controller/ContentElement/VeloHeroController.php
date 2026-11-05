@@ -7,8 +7,12 @@ namespace App\Controller\ContentElement;
 use Contao\ContentModel;
 use Contao\CoreBundle\Controller\ContentElement\AbstractContentElementController;
 use Contao\CoreBundle\DependencyInjection\Attribute\AsContentElement;
+use Contao\CoreBundle\Image\Studio\Studio;
 use Contao\CoreBundle\Twig\FragmentTemplate;
 use Contao\FilesModel;
+use Contao\Image\PictureConfiguration;
+use Contao\Image\PictureConfigurationItem;
+use Contao\Image\ResizeConfiguration;
 use Contao\StringUtil;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -16,6 +20,41 @@ use Symfony\Component\HttpFoundation\Response;
 #[AsContentElement('velo_hero', category: 'velo', template: 'content_element/velo_hero')]
 class VeloHeroController extends AbstractContentElementController
 {
+    /**
+     * Target size for the hero image, run through Contao's resize/compression pipeline instead of
+     * serving the uploaded original as-is. Matches the display box in site.css (.vw-hero__img,
+     * ~560x460 at 1x on desktop) at roughly retina density; "crop" avoids shipping extra pixels the
+     * CSS object-fit: cover would just discard anyway.
+     *
+     * AVIF/WebP are offered as <source> alternatives ahead of the JPEG fallback -- relies on the
+     * server's GD/Imagick build being able to encode both; confirmed locally, not yet verified on
+     * the Hostpoint production target (see DEPLOY.md once that's written).
+     */
+    private function heroPictureConfig(): PictureConfiguration
+    {
+        return (new PictureConfiguration())
+            ->setSize(
+                (new PictureConfigurationItem())->setResizeConfig(
+                    (new ResizeConfiguration())
+                        ->setWidth(1200)
+                        ->setHeight(960)
+                        ->setMode(ResizeConfiguration::MODE_CROP)
+                )
+            )
+            ->setFormats([
+                PictureConfiguration::FORMAT_DEFAULT => ['avif', 'webp', PictureConfiguration::FORMAT_DEFAULT],
+            ])
+        ;
+    }
+
+    public static function getSubscribedServices(): array
+    {
+        $services = parent::getSubscribedServices();
+        $services[Studio::class] = Studio::class;
+
+        return $services;
+    }
+
     protected function getResponse(FragmentTemplate $template, ContentModel $model, Request $request): Response
     {
         $this->addDefaultDataToTemplate($template, $model->row());
@@ -37,16 +76,26 @@ class VeloHeroController extends AbstractContentElementController
         }
         $template->set('stats', $stats);
 
-        $imgSrc = null;
+        $img = null;
+        $imgSources = [];
         $imgAlt = '';
         if ($model->addImage && $model->singleSRC) {
             $file = FilesModel::findByUuid($model->singleSRC);
             if ($file !== null) {
-                $imgSrc = '/' . $file->path;
-                $imgAlt = $model->alt ?: '';
+                $figure = $this->container->get(Studio::class)->createFigureBuilder()
+                    ->fromFilesModel($file)
+                    ->setSize($this->heroPictureConfig())
+                    ->buildIfResourceExists();
+
+                if ($figure !== null) {
+                    $img = $figure->getImage()->getImg();
+                    $imgSources = $figure->getImage()->getSources();
+                    $imgAlt = $model->alt ?: '';
+                }
             }
         }
-        $template->set('img_src', $imgSrc);
+        $template->set('img', $img);
+        $template->set('img_sources', $imgSources);
         $template->set('img_alt', $imgAlt);
 
         return $template->getResponse();

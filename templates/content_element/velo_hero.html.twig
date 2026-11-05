@@ -45,9 +45,16 @@
                 {% endif %}
             </div>
 
-            {% if img_src %}
+            {% if img %}
                 <figure class="vw-hero__img">
-                    <img src="{{ img_src }}" alt="{{ img_alt }}" loading="eager">
+                    <picture>
+                        {% for source in img_sources %}
+                            <source type="{{ source.type }}" srcset="{{ source.srcset }}">
+                        {% endfor %}
+                        <img src="{{ img.src }}" alt="{{ img_alt }}" loading="eager"
+                             {%- if img.width %} width="{{ img.width }}"{% endif %}
+                             {%- if img.height %} height="{{ img.height }}"{% endif %}>
+                    </picture>
                 </figure>
             {% endif %}
         </div>
