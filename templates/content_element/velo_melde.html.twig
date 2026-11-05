@@ -1,4 +1,9 @@
-{# velo_melde content element — strip only; modal lives in the global layout template #}
+{# velo_melde content element — links out to a VeloMelder backend "Meldekarte" (separate
+   project/repo) instead of the local "Stelle melden" modal. Host is environment-configurable
+   (see velomelder_backend_host, config/config.yaml / .env) -- same pattern as the main nav's
+   own "Feedback gelbes Band" link. Which specific card via velo_melde_card (VeloMeldeController
+   maps the stored key to a path; melde_card_path is null if that map has no entry for it, e.g.
+   stale data from before a card was renamed/removed). #}
 {% extends '@Contao/content_element/_base.html.twig' %}
 {% set _melde_headline = headline.text %}
 {% set headline = {text: '', tagName: 'h3'} %}
@@ -17,15 +22,15 @@
                 <div class="vw-melde__body">{{ text|raw }}</div>
             {% endif %}
         </div>
-        <div class="vw-melde__btn">
-            <button type="button"
-                    class="vw-btn vw-btn--primary"
-                    onclick="document.getElementById('modal-melde').classList.add('open')"
-                    aria-haspopup="dialog">
-                {{ btn_label|default('Stelle melden') }}
-                <i data-lucide="arrow-right" width="16" height="16" aria-hidden="true"></i>
-            </button>
-        </div>
+        {% if melde_card_path %}
+            <div class="vw-melde__btn">
+                <a href="https://{{ velomelder_backend_host }}{{ melde_card_path }}" target="_blank" rel="noopener"
+                   class="vw-btn vw-btn--primary">
+                    {{ btn_label|default('Stelle melden') }}
+                    <i data-lucide="arrow-right" width="16" height="16" aria-hidden="true"></i>
+                </a>
+            </div>
+        {% endif %}
     </div>
 </section>
 {% endblock %}

@@ -16,7 +16,7 @@ $GLOBALS['TL_DCA']['tl_content']['palettes']['velo_hero'] =
 
 $GLOBALS['TL_DCA']['tl_content']['palettes']['velo_melde'] =
     '{type_legend},type;'.
-    '{melde_legend},velo_eyebrow,headline,text,velo_btn_label,velo_form_id;'.
+    '{melde_legend},velo_eyebrow,headline,text,velo_btn_label,velo_melde_card;'.
     '{invisible_legend:hide},invisible,start,stop';
 
 $GLOBALS['TL_DCA']['tl_content']['palettes']['velo_positions'] =
@@ -161,10 +161,25 @@ $GLOBALS['TL_DCA']['tl_content']['fields']['velo_stats'] = [
 // ============================================================
 
 $GLOBALS['TL_DCA']['tl_content']['fields']['velo_btn_label'] = [
-    'label'     => ['Button-Text', 'Text des Buttons, der das Modal öffnet'],
+    'label'     => ['Button-Text', 'Text des Buttons, der zur Meldekarte verlinkt'],
     'inputType' => 'text',
     'eval'      => ['maxlength' => 100, 'tl_class' => 'w50'],
     'sql'       => "varchar(100) NOT NULL default 'Stelle melden'",
+];
+
+/* The option VALUE is a short stable key, not the literal path -- VeloMeldeController maps it
+   to the actual URL path (see MELDE_CARD_PATHS there), same indirection pattern as
+   VeloParkTestController::CRITERIA_OPTIONS. Keeps the stored DB value decoupled from the path,
+   so the path can change in one place without touching existing content rows, and new cards
+   only ever need a new option here + a new map entry in the controller. */
+$GLOBALS['TL_DCA']['tl_content']['fields']['velo_melde_card'] = [
+    'label'     => ['Meldekarte', 'Auf welche Velomelder-Karte dieses Element verlinkt'],
+    'inputType' => 'select',
+    'options'   => [
+        'gelbes-band' => 'Feedback gelbes Band',
+    ],
+    'eval'      => ['mandatory' => true, 'tl_class' => 'w50'],
+    'sql'       => "varchar(64) NOT NULL default ''",
 ];
 
 $GLOBALS['TL_DCA']['tl_content']['fields']['velo_form_id'] = [

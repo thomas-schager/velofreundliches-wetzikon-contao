@@ -1,0 +1,9 @@
+# Contao Managed Edition only auto-loads a single config/config.yaml (or config/config_<env>.yaml)
+# -- not config/packages/*.yaml like a plain Symfony Flex project -- see
+# ContaoKernel::registerContainerConfiguration()/getConfigFile() in vendor/contao/manager-bundle.
+#
+# Exposes environment-specific values to Twig templates as globals, so templates can read e.g.
+# {{ velomelder_backend_host }} without needing a dedicated controller just to pass one string.
+twig:
+    globals:
+        velomelder_backend_host: '%env(VELOMELDER_BACKEND_HOST)%'

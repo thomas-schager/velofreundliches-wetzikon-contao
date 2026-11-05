@@ -15,13 +15,16 @@
 
     <span class="vw-nav__spacer" aria-hidden="true"></span>
 
-    {# Stelle melden CTA — hidden on mobile (in drawer), shown on desktop #}
-    <button type="button" class="vw-btn vw-btn--primary vw-btn--sm vw-nav__cta"
-            onclick="document.getElementById('modal-melde').classList.add('open')"
-            aria-haspopup="dialog">
+    {# "Feedback gelbes Band" CTA — hidden on mobile (in drawer), shown on desktop. Links out to
+       the VeloMelder backend app (separate project/repo), not the local "Stelle melden" modal
+       (that's still used elsewhere, e.g. the velo_melde content element's own button). Host is
+       environment-configurable -- see VELOMELDER_BACKEND_HOST in .env / config/config.yaml --
+       so this doesn't need a code change once a real production backend host exists. #}
+    <a href="https://{{ velomelder_backend_host }}/velomelder-gelbes-band.html" target="_blank" rel="noopener"
+       class="vw-btn vw-btn--primary vw-btn--sm vw-nav__cta">
         <i data-lucide="map-pin" width="16" height="16" aria-hidden="true"></i>
-        Stelle melden
-    </button>
+        Feedback gelbes Band
+    </a>
 
     {# Mobile burger — hidden on desktop #}
     <button class="vw-burger" id="vwBurger" type="button"
@@ -56,12 +59,11 @@
         <div class="vw-drawer__scroll">
             {{ items|raw }}
         </div>
-        <button type="button" class="vw-btn vw-btn--primary"
-                onclick="document.getElementById('modal-melde').classList.add('open'); (function(){var d=document.getElementById('vwDrawer'),b=document.getElementById('vwBurger');d.classList.remove('is-open');d.setAttribute('aria-hidden','true');b.setAttribute('aria-expanded','false');document.body.style.overflow='';})()"
-                aria-haspopup="dialog">
+        <a href="https://{{ velomelder_backend_host }}/velomelder-gelbes-band.html" target="_blank" rel="noopener"
+           class="vw-btn vw-btn--primary">
             <i data-lucide="map-pin" width="16" height="16" aria-hidden="true"></i>
-            Stelle melden
-        </button>
+            Feedback gelbes Band
+        </a>
     </div>
 </div>
 
