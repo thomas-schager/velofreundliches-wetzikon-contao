@@ -5,17 +5,20 @@
    longer free-text explanation stays below it. See the four-area grid in .vw-parktest__grid. #}
 {% extends '@Contao/content_element/_base.html.twig' %}
 
-{# Suppress the base template's own auto-rendered headline (it would otherwise render above
-   our custom wrapper) and place it ourselves, inside .vw-parktest__main -- same pattern as
-   velo_join.html.twig / velo_newsletter.html.twig. #}
-{% set _headline = headline.text %}
-{% set headline = {text: '', tagName: 'h2'} %}
+{# Defensively clear the base template's own auto-rendered headline (it would otherwise render
+   above our custom wrapper if a stray value were ever present on the shared `headline` column)
+   -- same defensive pattern as velo_hero.html.twig, even though this element no longer uses
+   that field at all. The page title is always an H1 now, via the dedicated velo_pt_title field
+   (plain text, no level selector -- editors can't change it to h2/h3/etc.), rendered directly
+   below with a scoped class so it keeps the exact visual size it always had (the design
+   system's H2 scale), not the bigger/bolder generic H1 rule. #}
+{% set headline = {text: '', tagName: 'h1'} %}
 
 {% block content %}
 <section class="vw-parktest">
     <div class="vw-container vw-parktest__grid">
         <div class="vw-parktest__lead-block">
-            {% if _headline %}<h2>{{ _headline }}</h2>{% endif %}
+            {% if pt_title %}<h1 class="vw-parktest__title">{{ pt_title|raw }}</h1>{% endif %}
             {% if lead %}<p class="vw-lead vw-parktest__lead">{{ lead }}</p>{% endif %}
         </div>
 
@@ -41,6 +44,23 @@
                 <div class="vw-parktest__note">
                     <span class="vw-parktest__note-label">Note</span>
                     <span class="vw-parktest__note-value" style="color:{{ note_color }};">{{ note }}</span>
+                    <div class="vw-parktest__note-trigger-wrap">
+                        {# Fixed explanation of the rating scale -- same for every park-test report,
+                           so it's hardcoded here rather than a per-instance field (would otherwise
+                           need retyping on every page). Opens as a popover right next to this
+                           trigger: native <dialog>-adjacent `popover` attribute handles click/tap,
+                           outside-click and Escape on its own; the matching hover behaviour for
+                           mouse users is wired up in the script block below ("Variante 5" from the
+                           /tmp comparison -- see that file's own comments for why the hover JS is
+                           guarded behind a (hover:hover) media check). #}
+                        <button type="button" class="vw-parktest__note-trigger" id="vw-pt-note-trigger-{{ data.id }}" popovertarget="vw-pt-note-pop-{{ data.id }}">
+                            <i data-lucide="info" width="14" height="14"></i>
+                            Berechnung
+                        </button>
+                    </div>
+                </div>
+                <div id="vw-pt-note-pop-{{ data.id }}" popover class="vw-parktest__note-bubble">
+                    Bei jedem Kriterium gibt es 2, 1 oder 0 Punkte. Besonderheiten nutzen wir zum Auf- oder Abrunden. Die schlechteste Note ist eine 1, die beste eine 6.
                 </div>
             {% endif %}
 
@@ -79,6 +99,34 @@
         {% endif %}
     </div>
 </section>
+
+{% if note %}
+    <script>
+    (function () {
+        var trigger = document.getElementById('vw-pt-note-trigger-{{ data.id }}');
+        var bubble = document.getElementById('vw-pt-note-pop-{{ data.id }}');
+        if (!trigger || !bubble) { return; }
+
+        /* A real touch tap doesn't just fire touchstart/touchend+click -- browsers synthesize a
+           mouseenter/mouseover/mousedown/mouseup pass right before the click, for compatibility
+           with sites that only listen for mouse events (confirmed by logging the actual event
+           order a tap produces: touchstart, touchend, mouseover, mouseenter, mousedown, mouseup,
+           click). Without this guard, that synthetic mouseenter would call showPopover() first,
+           and the native click-toggle (already open) would immediately close it again -- tap
+           would open-then-instantly-close instead of staying open. Only attach the hover
+           listeners on devices that actually have a real hovering pointer; touch-only devices
+           rely solely on the native click/tap toggle from popovertarget. */
+        if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+            trigger.addEventListener('mouseenter', function () {
+                if (!bubble.matches(':popover-open')) { bubble.showPopover(); }
+            });
+            trigger.addEventListener('mouseleave', function () {
+                if (bubble.matches(':popover-open')) { bubble.hidePopover(); }
+            });
+        }
+    })();
+    </script>
+{% endif %}
 
 {% if lat and lng %}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">

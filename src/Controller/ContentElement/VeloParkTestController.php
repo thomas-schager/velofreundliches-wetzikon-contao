@@ -43,6 +43,7 @@ class VeloParkTestController extends AbstractContentElementController
     {
         $this->addDefaultDataToTemplate($template, $model->row());
 
+        $template->set('pt_title', $model->velo_pt_title);
         $template->set('lead', $model->velo_lead);
 
         $highlights = StringUtil::deserialize($model->velo_pt_highlights, true);

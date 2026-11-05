@@ -64,7 +64,7 @@ $GLOBALS['TL_DCA']['tl_content']['palettes']['velo_feature_photo'] =
     '{invisible_legend:hide},invisible,start,stop';
 
 $GLOBALS['TL_DCA']['tl_content']['palettes']['velo_park_test'] =
-    '{type_legend},type,headline,velo_lead;'.
+    '{type_legend},type,velo_pt_title,velo_lead;'.
     '{highlights_legend},velo_pt_highlights;'.
     '{explanation_legend},velo_pt_explanation;'.
     '{note_legend},velo_pt_note;'.
@@ -86,7 +86,11 @@ $GLOBALS['TL_DCA']['tl_content']['fields']['velo_eyebrow'] = [
 $GLOBALS['TL_DCA']['tl_content']['fields']['velo_lead'] = [
     'label'     => ['Lead-Text', 'Einleitungstext unter der Überschrift'],
     'inputType' => 'textarea',
-    'eval'      => ['rows' => 3, 'tl_class' => 'clr'],
+    /* 'long' (not just 'clr') to match the title field it follows in every palette that uses
+       it (velo_hero_title, velo_pt_title, both 'clr long') -- without it, this field fell back
+       to a narrower default width instead of spanning the same full width as its neighbour,
+       which read as an indent in the backend edit form. */
+    'eval'      => ['rows' => 3, 'tl_class' => 'clr long'],
     'sql'       => 'text NULL',
 ];
 
@@ -264,6 +268,16 @@ $GLOBALS['TL_DCA']['tl_content']['fields']['velo_tabs'] = [
 // (standalone section: besonderheiten highlights + explanation in the main column,
 // note/criteria/map summarized in a wide sidebar card — see velo_park_test.html.twig)
 // ============================================================
+
+// Dedicated plain-text title field instead of the generic headline (inputUnit) field -- this
+// heading is always the page's H1, editors can't change the level. Same pattern as
+// velo_hero_title (also a fixed-level, plain-text title field for exactly this reason).
+$GLOBALS['TL_DCA']['tl_content']['fields']['velo_pt_title'] = [
+    'label'     => ['H1-Titel (HTML erlaubt)', 'Titel der Seite. HTML-Tags wie <em> sind erlaubt.'],
+    'inputType' => 'text',
+    'eval'      => ['allowHtml' => true, 'maxlength' => 255, 'tl_class' => 'clr long'],
+    'sql'       => "varchar(255) NOT NULL default ''",
+];
 
 $GLOBALS['TL_DCA']['tl_content']['fields']['velo_pt_highlights'] = [
     'label'     => ['Besonderheiten', 'Stichpunkte mit Einordnung: + (positiv), ~ (teils), – (negativ)'],
