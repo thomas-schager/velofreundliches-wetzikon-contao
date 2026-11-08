@@ -9,7 +9,7 @@ declare(strict_types=1);
 $GLOBALS['TL_DCA']['tl_content']['palettes']['velo_hero'] =
     '{type_legend},type;'.
     '{hero_legend},velo_eyebrow,velo_hero_title,velo_lead;'.
-    '{buttons_legend},velo_btn_primary_label,velo_btn_primary_href,velo_btn_secondary_label,velo_btn_secondary_href;'.
+    '{buttons_legend},velo_btn_primary_label,velo_btn_primary_page,velo_btn_secondary_label,velo_btn_secondary_page;'.
     '{stats_legend},velo_stats;'.
     '{image_legend:hide},addImage;'.
     '{invisible_legend:hide},invisible,start,stop';
@@ -17,6 +17,11 @@ $GLOBALS['TL_DCA']['tl_content']['palettes']['velo_hero'] =
 $GLOBALS['TL_DCA']['tl_content']['palettes']['velo_melde'] =
     '{type_legend},type;'.
     '{melde_legend},velo_eyebrow,headline,text,velo_btn_label,velo_melde_card;'.
+    '{invisible_legend:hide},invisible,start,stop';
+
+$GLOBALS['TL_DCA']['tl_content']['palettes']['velo_lead'] =
+    '{type_legend},type,headline;'.
+    '{lead_legend},velo_eyebrow,velo_lead;'.
     '{invisible_legend:hide},invisible,start,stop';
 
 $GLOBALS['TL_DCA']['tl_content']['palettes']['velo_positions'] =
@@ -131,6 +136,29 @@ $GLOBALS['TL_DCA']['tl_content']['fields']['velo_hero_title'] = [
     'inputType' => 'text',
     'eval'      => ['allowHtml' => true, 'maxlength' => 512, 'tl_class' => 'clr long'],
     'sql'       => "varchar(512) NOT NULL default ''",
+];
+
+/* Page picker instead of the free-text velo_btn_primary_href/velo_btn_secondary_href used
+   elsewhere (velo_join) -- hero buttons should only ever point at a real Contao page, so storing
+   the page ID lets VeloHeroController resolve the actual URL via ContentUrlGenerator, which stays
+   correct if the page is ever moved/renamed. Canonical pattern copied from Contao core's own
+   tl_module.jumpTo field. */
+$GLOBALS['TL_DCA']['tl_content']['fields']['velo_btn_primary_page'] = [
+    'label'      => ['Primär-Button Ziel-Seite', 'Seite, auf die der Button verlinkt'],
+    'inputType'  => 'pageTree',
+    'foreignKey' => 'tl_page.title',
+    'eval'       => ['fieldType' => 'radio', 'tl_class' => 'clr'],
+    'sql'        => "int(10) unsigned NOT NULL default 0",
+    'relation'   => ['type' => 'hasOne', 'load' => 'lazy'],
+];
+
+$GLOBALS['TL_DCA']['tl_content']['fields']['velo_btn_secondary_page'] = [
+    'label'      => ['Sekundär-Button Ziel-Seite', 'Seite, auf die der Button verlinkt'],
+    'inputType'  => 'pageTree',
+    'foreignKey' => 'tl_page.title',
+    'eval'       => ['fieldType' => 'radio', 'tl_class' => 'clr'],
+    'sql'        => "int(10) unsigned NOT NULL default 0",
+    'relation'   => ['type' => 'hasOne', 'load' => 'lazy'],
 ];
 
 $GLOBALS['TL_DCA']['tl_content']['fields']['velo_stats'] = [

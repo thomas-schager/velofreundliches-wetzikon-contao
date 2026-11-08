@@ -8,14 +8,17 @@ use Contao\ContentModel;
 use Contao\CoreBundle\Controller\ContentElement\AbstractContentElementController;
 use Contao\CoreBundle\DependencyInjection\Attribute\AsContentElement;
 use Contao\CoreBundle\Image\Studio\Studio;
+use Contao\CoreBundle\Routing\ContentUrlGenerator;
 use Contao\CoreBundle\Twig\FragmentTemplate;
 use Contao\FilesModel;
 use Contao\Image\PictureConfiguration;
 use Contao\Image\PictureConfigurationItem;
 use Contao\Image\ResizeConfiguration;
+use Contao\PageModel;
 use Contao\StringUtil;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Exception\ExceptionInterface;
 
 #[AsContentElement('velo_hero', category: 'velo', template: 'content_element/velo_hero')]
 class VeloHeroController extends AbstractContentElementController
@@ -51,8 +54,33 @@ class VeloHeroController extends AbstractContentElementController
     {
         $services = parent::getSubscribedServices();
         $services[Studio::class] = Studio::class;
+        $services[ContentUrlGenerator::class] = ContentUrlGenerator::class;
 
         return $services;
+    }
+
+    /**
+     * Resolves a velo_btn_*_page page ID into the page's URL. Returns null if no page is
+     * selected or the page can no longer be routed (e.g. it was deleted) -- the template hides
+     * the button in that case instead of linking nowhere.
+     */
+    private function resolvePageHref(int $pageId): ?string
+    {
+        if ($pageId <= 0) {
+            return null;
+        }
+
+        $page = PageModel::findById($pageId);
+
+        if ($page === null) {
+            return null;
+        }
+
+        try {
+            return $this->container->get(ContentUrlGenerator::class)->generate($page);
+        } catch (ExceptionInterface) {
+            return null;
+        }
     }
 
     protected function getResponse(FragmentTemplate $template, ContentModel $model, Request $request): Response
@@ -63,9 +91,9 @@ class VeloHeroController extends AbstractContentElementController
         $template->set('hero_title', $model->velo_hero_title);
         $template->set('lead', $model->velo_lead);
         $template->set('btn_primary_label', $model->velo_btn_primary_label);
-        $template->set('btn_primary_href', $model->velo_btn_primary_href);
+        $template->set('btn_primary_href', $this->resolvePageHref((int) $model->velo_btn_primary_page));
         $template->set('btn_secondary_label', $model->velo_btn_secondary_label);
-        $template->set('btn_secondary_href', $model->velo_btn_secondary_href);
+        $template->set('btn_secondary_href', $this->resolvePageHref((int) $model->velo_btn_secondary_page));
 
         $rawStats = StringUtil::deserialize($model->velo_stats, true);
         $stats = [];

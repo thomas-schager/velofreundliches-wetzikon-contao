@@ -329,6 +329,15 @@
 .vw-hero { padding-top: var(--space-4); overflow: hidden; }
 @media (min-width: 600px) { .vw-hero { padding-top: var(--space-5); } }
 
+/* velo_lead -- the non-homepage equivalent of the hero (page title + lead text, no image/stats).
+   Deliberately NOT .vw-section: that class's heavier padding-block (space-6/7/8, meant for
+   in-page content sections between other sections) stacked on top of .vw-main's own padding-top
+   made this block carry far more top padding than the actual hero above it on the homepage --
+   same padding-top scale as .vw-hero instead, no bottom padding of its own (the section that
+   follows supplies the gap via its own top padding, exactly like it does after the hero). */
+.vw-page-intro { padding-top: var(--space-4); }
+@media (min-width: 600px) { .vw-page-intro { padding-top: var(--space-5); } }
+
 .vw-hero__grid {
   display: grid;
   gap: var(--space-6);

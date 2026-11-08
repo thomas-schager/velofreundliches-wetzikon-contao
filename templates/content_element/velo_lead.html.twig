@@ -1,0 +1,26 @@
+{# velo_lead content element — standalone eyebrow + heading + lead-text intro block. Use as a
+   page's H1 intro (pick "h1" in the Überschrift field) or as a section lead further down a page
+   (pick "h2") -- same eyebrow/heading/lead shape as velo_positions' section intro, just without
+   the cards grid below it. #}
+{% extends '@Contao/content_element/_base.html.twig' %}
+{% set _lead_text = headline.text %}
+{% set _lead_tag = headline.tag_name %}
+{% set headline = {text: '', tagName: 'h1'} %}
+
+{% block content %}
+<section class="vw-page-intro">
+    <div class="vw-container">
+        <div class="vw-heading">
+            {% if eyebrow %}
+                <span class="vw-eyebrow">{{ eyebrow }}</span>
+            {% endif %}
+            {% if _lead_text %}
+                <{{ _lead_tag }}>{{ _lead_text|insert_tag_raw }}</{{ _lead_tag }}>
+            {% endif %}
+            {% if lead %}
+                <p class="vw-lead">{{ lead }}</p>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}
