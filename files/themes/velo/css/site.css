@@ -322,21 +322,60 @@
   margin-inline: calc(-1 * var(--gutter));
 }
 
+/* .vw-section's padding-block (32/48/64px, below) is tuned as the standard gap *between* two
+   sections -- each side contributes half, so two adjacent .vw-section elements meet in the
+   middle at the full rhythm value. That assumption breaks at the two ends of a page:
+   - First element: .vw-main above already contributes its own top padding (--space-5/6/7,
+     i.e. 24/32/48px) on its own, scaling with the same breakpoints -- any padding-top on the
+     first element's own .vw-section stacks fully on top of that (padding never collapses, only
+     margins do), so it needs to be zero, full stop, not just a smaller nonzero value. An
+     earlier pass here used --space-4/5 as a "lighter than the normal --space-6/7/8 but still
+     present" compromise -- still visibly more top space than a plain Contao element (no
+     .vw-section at all) sitting in the exact same first-element spot, which has none of its
+     own and relies on .vw-main alone (found by directly comparing /initiative/unterstuetzen
+     and / against /tests/parkplaetze-und-abstellmoeglichkeiten's plain-text intro, 2026-11-14).
+     Zero here makes every first element -- custom .vw-section-based or plain -- rely on
+     .vw-main's own padding alone, consistently.
+   - Last element: .vw-footer always adds its own fixed 96px margin-top regardless of what
+     precedes it (same as .vw-hero/.vw-join/.vw-newsletter, which all carry zero bottom spacing
+     of their own for this reason) -- .vw-section's bottom padding was pure redundant padding
+     stacked underneath that, same bug as the velo_lead/.vw-heading one above, just the mirror
+     case. Matches .content-velo-feature-photo's own :first-child handling further down this
+     file -- same principle, applied to .vw-section's generic case (2026-11-13). */
+[class*="content-velo-"]:first-child .vw-section {
+  padding-top: 0;
+}
+[class*="content-velo-"]:last-child .vw-section {
+  padding-bottom: 0;
+}
+
 /* ============================================================
    HERO
    ============================================================ */
 
+/* padding-top: var(--space-4)/5 is this element's spacing from whatever precedes it when it's
+   NOT the page's first element -- a real, if currently untested-in-production, case (confirmed
+   via the "velo_* elements showcase" audit page, 2026-11-14: without a fallback value here,
+   .vw-hero sitting mid-page had almost no gap from the previous element, since it was relying
+   on .content-velo-* breakout alone). When it IS first, :first-child below zeroes this so it
+   relies entirely on .vw-main's own top padding instead of stacking on top of it (same
+   reasoning as [class*="content-velo-"]:first-child .vw-section above) -- a first pass at this
+   fix zeroed padding-top unconditionally instead of scoping it to :first-child, which is what
+   caused the mid-page gap in the first place. */
 .vw-hero { padding-top: var(--space-4); overflow: hidden; }
 @media (min-width: 600px) { .vw-hero { padding-top: var(--space-5); } }
+.content-velo-hero:first-child .vw-hero { padding-top: 0; }
 
 /* velo_lead -- the non-homepage equivalent of the hero (page title + lead text, no image/stats).
    Deliberately NOT .vw-section: that class's heavier padding-block (space-6/7/8, meant for
    in-page content sections between other sections) stacked on top of .vw-main's own padding-top
-   made this block carry far more top padding than the actual hero above it on the homepage --
-   same padding-top scale as .vw-hero instead, no bottom padding of its own (the section that
-   follows supplies the gap via its own top padding, exactly like it does after the hero). */
+   made this block carry far more top padding than the actual hero above it on the homepage.
+   Same padding-top/:first-child pattern as .vw-hero right above, same reasoning -- no bottom
+   padding of its own either (the section that follows supplies the gap via its own top
+   padding, exactly like it does after the hero). */
 .vw-page-intro { padding-top: var(--space-4); }
 @media (min-width: 600px) { .vw-page-intro { padding-top: var(--space-5); } }
+.content-velo-lead:first-child .vw-page-intro { padding-top: 0; }
 
 .vw-hero__grid {
   display: grid;
@@ -350,22 +389,39 @@
   }
 }
 
-/* Image: on mobile show first (order: -1), on desktop restore */
+/* Used to show the image first on mobile (order: -1), pushing the claim/buttons/stats below
+   220px of photo and out of the fold. Removed: text now stays in its natural DOM order (claim
+   first) at every width -- no order needed at all, image already comes after .vw-hero__content
+   in the markup (prototyped as "Variante 1 -- nur Reorder" in /tmp first, 2026-11-15).
+   margin-inline: 0 below 960px (was calc(-1 * var(--gutter)), i.e. edge-to-edge) -- contains
+   the image within the normal gutter instead of letting it bleed full-width, so it reads as
+   one framed element alongside the text rather than a separate full-bleed banner. Height is
+   deliberately left untouched (still 220/320px, unlike the more aggressive "Variante 3" tried
+   in /tmp first, which also shrank it to 110px): cropping height risks cutting faces out of
+   whatever photo is used, and there's no reliable way to guarantee every future hero image is
+   framed with its subject vertically centered enough to survive that (2026-11-15). */
 .vw-hero__img {
-  order: -1;
   border-radius: var(--radius-md);
   overflow: hidden;
   height: 220px;
-  margin-inline: calc(-1 * var(--gutter));
+  margin-inline: 0;
 }
 @media (min-width: 600px) { .vw-hero__img { height: 320px; } }
-@media (min-width: 960px) { .vw-hero__img { order: 1; height: 460px; margin-inline: 0; } }
+@media (min-width: 960px) { .vw-hero__img { height: 460px; } }
 
 .vw-hero__img img { width: 100%; height: 100%; object-fit: cover; }
 
 .vw-hero__content { display: flex; flex-direction: column; gap: var(--space-5); }
 
-.vw-hero__title { margin-top: var(--space-2); }
+/* font-size overrides the bare h1 rule's clamp(--text-4xl, 5vw, --text-6xl) (colors_and_type.css)
+   with a lower, fixed ceiling -- 5vw alone kept growing past the viewport width where "Gemeinsam
+   für ein" still fits on one line against .vw-hero__grid's fixed 1.1fr column (confirmed: the
+   title wrapped onto a 4th line between 1544px and 1545px viewport width, where 5vw crosses
+   ~77.2px -- a continuous function hitting a hard wrapping threshold, not a deliberate
+   breakpoint). Capping at a fixed px instead of --text-6xl freezes growth there instead of
+   continuing to the 80px ceiling at 1600px (2026-11-15). font-weight/line-height still come
+   from the bare h1 rule -- only font-size needed its own value here. */
+.vw-hero__title { font-size: clamp(var(--text-4xl), 5vw, 77px); margin-top: var(--space-2); }
 .vw-hero__title em { font-style: normal; color: var(--color-primary); }
 
 .vw-hero__lead { color: var(--color-text-muted); font-size: var(--text-xl); line-height: var(--lh-relaxed); }
@@ -395,6 +451,11 @@
   padding-block: 24px 8px;
   padding-inline: var(--gutter);
 }
+/* First-element norm (see .vw-hero/.vw-page-intro/.vw-section/.vw-parktest, 2026-11-14): relies
+   entirely on .vw-main's own top padding when first, instead of stacking its own 24px on top
+   of it. Not yet triggered on any real page (velo_melde is never first today), but the same
+   latent bug as the others -- found via a full audit after fixing those. */
+.content-velo-melde:first-child .vw-melde { padding-top: 0; }
 
 .vw-melde__card {
   background: #fff;
@@ -452,6 +513,49 @@
   text-decoration: none;
 }
 .vw-card__link:hover { text-decoration: underline; }
+
+/* Dark variant (velo_levels) -- e.g. a "Firmen & Organisationen" level that's visually a
+   different category, not just a bigger number in the same scale as the light cards next to it. */
+.vw-card--dark { background: #000; border-color: #000; }
+.vw-card--dark h3,
+.vw-card--dark .vw-card__sub { color: #fff; }
+.vw-card--dark .vw-card__icon { color: var(--color-accent); }
+
+/* Subtitle line directly under a card's h3 (velo_levels) -- pulled up close to the heading,
+   smaller than the card's own muted-body-text rule above (.vw-card p). */
+.vw-card__sub { font-size: var(--text-sm); margin-top: calc(-1 * var(--space-2)); margin-bottom: var(--space-4); }
+
+/* .vw-check-list (below) assumes a dark background by default (white-ish text, built for
+   .vw-join) -- this is the override for using it inside a light .vw-card instead. Compound
+   selector (not just ".vw-check-list--light li") so it outranks the base rule regardless of
+   source order, since both would otherwise have equal specificity. */
+.vw-check-list.vw-check-list--light li { color: var(--color-text-muted); }
+
+/* ============================================================
+   STEPS (velo_steps) -- numbered "how it works" list, e.g. 01/02
+   ============================================================ */
+
+.vw-steps {
+  display: grid;
+  gap: var(--space-6);
+}
+@media (min-width: 720px) { .vw-steps { grid-template-columns: 1fr 1fr; gap: var(--space-7); } }
+/* Same desktop breakpoint .vw-cards-3 switches to 3 columns at -- broad desktop only, so a
+   2-step flow still gets the wider 2-col treatment above instead of being stretched into 3. */
+@media (min-width: 960px) { .vw-steps { grid-template-columns: 1fr 1fr 1fr; } }
+
+.vw-step { display: flex; gap: var(--space-4); }
+.vw-step__num {
+  font: 700 var(--text-3xl)/1 var(--font-display);
+  color: var(--color-primary);
+  flex-shrink: 0;
+  width: 48px;
+}
+
+.vw-step__body h3 { display: flex; align-items: center; gap: 8px; margin-bottom: var(--space-2); font-size: var(--text-xl); }
+.vw-step__body h3 i,
+.vw-step__body h3 svg { color: var(--color-primary); flex-shrink: 0; }
+.vw-step__body p { color: var(--color-text-muted); }
 
 /* ============================================================
    EVENTS
@@ -553,6 +657,9 @@
   color: #fff;
   margin-top: var(--space-9);
 }
+/* First-element norm (2026-11-14): see .content-velo-melde above for the full reasoning --
+   not yet triggered on any real page, fixed proactively for consistency. */
+.content-velo-join:first-child .vw-join { margin-top: 0; }
 
 .vw-join__inner {
   max-width: var(--max-w);
@@ -602,6 +709,9 @@
   color: #fff;
   margin-top: var(--space-9);
 }
+/* First-element norm (2026-11-14): see .content-velo-melde above for the full reasoning --
+   not yet triggered on any real page, fixed proactively for consistency. */
+.content-velo-newsletter:first-child .vw-newsletter { margin-top: 0; }
 
 .vw-newsletter__inner {
   max-width: var(--max-w);
@@ -690,6 +800,9 @@
   margin-top: var(--space-9);
   padding: var(--space-5);
 }
+/* First-element norm (2026-11-14): see .content-velo-melde above for the full reasoning --
+   not yet triggered on any real page, fixed proactively for consistency. */
+.content-velo-newsletter-compact:first-child .vw-newsletter-compact { margin-top: 0; }
 .vw-newsletter-compact__row {
   display: flex;
   align-items: center;
@@ -860,6 +973,19 @@
    TABS (Themen page)
    ============================================================ */
 
+/* velo_tabs has no .vw-section (just a bare .vw-container, see the template) and previously had
+   no top/bottom spacing of its own at all -- unlike every other velo_* element, which manages
+   its own gap from whatever precedes/follows it one way or another, this one sat flush against
+   its neighbours (found via a full spacing audit, 2026-11-14). Margin, not .vw-section padding,
+   to match .vw-parktest's same non-.vw-section pattern -- and the same first-element norm as
+   everywhere else: zero when it's the page's first element, relying on .vw-main's own padding
+   instead of stacking on top of it. */
+.content-velo-tabs { margin-top: var(--space-6); margin-bottom: var(--space-6); }
+@media (min-width: 600px) {
+  .content-velo-tabs { margin-top: var(--space-7); margin-bottom: var(--space-7); }
+}
+.content-velo-tabs:first-child { margin-top: 0; }
+
 .vw-tabs__nav {
   display: flex;
   overflow-x: auto;
@@ -1010,17 +1136,6 @@
 }
 .vw-form-aside__period { font: 400 14px var(--font-body); color: var(--color-text-muted); }
 
-/* ============================================================
-   GENERIC PAGE PADDING
-   ============================================================ */
-
-.vw-page-content {
-  max-width: var(--max-w);
-  margin-inline: auto;
-  padding-block: var(--space-7) var(--space-9);
-  padding-inline: var(--gutter);
-}
-
 /* Vertical rhythm between separate content elements stacked in an article (e.g. two images
    back to back, a text block followed by an image) -- see colors_and_type.css's heading rules
    and design-system/tokens.html#vertical-rhythm in the design-tokens repo for the full
@@ -1028,14 +1143,35 @@
    (vendor's content_element/_base.html.twig), so this targets any two such wrappers that are
    adjacent siblings -- a "lobotomized owl" selector, deliberately margin-top-only so gaps never
    double up regardless of which two element types happen to be adjacent.
-   Excludes content-velo-* (same distinction the gutter-breakout rule above already draws):
-   those are full bespoke sections (hero, melde, positions, join, newsletter, tabs, park_test)
-   that manage their own spacing via padding-block on an internal .vw-section wrapper, not
-   margin -- this rule is only meant to backfill plain content types (text/image/html/...) that
-   don't have any spacing of their own. Applying it unconditionally caused double-spacing on
-   the homepage (melde/positions each picked up an extra unwanted 32px on top of their own
-   already-tuned padding). */
-.mod_article > [class*="content-"]:not([class*="content-velo-"]) + [class*="content-"]:not([class*="content-velo-"]) { margin-top: var(--space-6); }
+   The RECEIVING side (after the +) excludes content-velo-* (same distinction the gutter-
+   breakout rule above already draws): those are full bespoke sections (hero, melde, positions,
+   join, newsletter, tabs, park_test) that manage their own spacing via padding-block on an
+   internal .vw-section wrapper, not margin -- this rule is only meant to backfill plain content
+   types (text/image/html/...) that don't have any spacing of their own. Applying it to a
+   content-velo-* receiver caused double-spacing on the homepage (melde/positions each picked up
+   an extra unwanted 32px on top of their own already-tuned padding).
+   The PRECEDING side used to carry the same :not([class*="content-velo-"]) exclusion, which
+   went one step too far: it meant a plain element only got this margin when ANOTHER plain
+   element came right before it, so e.g. a native "text" element directly after a velo_lead (a
+   content-velo-* element) got no top margin at all and sat flush against it -- found on
+   /initiative/unterstuetzen and reproduced on the "velo_* elements showcase" test page,
+   2026-11-14. A plain element needs its own top spacing regardless of what precedes it, same as
+   every velo_* element already provides its own regardless of what precedes IT -- so the
+   exclusion only belongs on the receiving side now. The adjacent-sibling combinator (+) alone
+   already keeps this from ever firing on the article's first element (no preceding sibling to
+   match), so no separate :first-child override is needed here.
+   A content element of Contao's own "module" type (an embedded frontend module, e.g. the
+   homepage's news-latest list) is a second kind of "plain" element this rule needs to reach,
+   but it renders WITHOUT any content-<type> wrapper at all -- Contao outputs the module's own
+   markup directly (e.g. <div class="mod_newslist block">), so [class*="content-"] alone never
+   matches it on either side. Found on the homepage: content-velo-melde followed directly by
+   mod_newslist sat flush together, same underlying bug as the text-element case, different
+   reason (missing wrapper instead of wrong :first-child scoping or a wrong exclusion side)
+   (2026-11-15). :is() lets a side accept either wrapper shape without writing the whole rule
+   twice; mod_* elements are never content-velo-* themselves so the receiving-side exclusion
+   doesn't need to repeat that check for them. */
+.mod_article > :is([class*="content-"], [class^="mod_"])
+  + :is([class*="content-"], [class^="mod_"]):not([class*="content-velo-"]) { margin-top: var(--space-6); }
 
 /* Contao article default */
 .mod_article { padding-block: 0; }
@@ -1056,6 +1192,14 @@
 @media (min-width: 600px) {
   .vw-parktest { margin-top: var(--space-7); margin-bottom: var(--space-7); }
 }
+/* Same "first element relies on .vw-main alone" fix as .vw-hero/.vw-page-intro/.vw-section
+   above: when velo_park_test is the article's first (and so far only real-world) use --
+   /tests/.../veloparkplaetze-migros-faerberwiese -- this margin-top stacked fully on top of
+   .vw-main's own top padding (margin never collapses with an ancestor's padding), same
+   redundant-gap bug, just via margin instead of padding (2026-11-14). Only the top margin is
+   zeroed; margin-bottom (the gap to whatever follows) and the non-first-child case (e.g. mid-
+   page on the "velo_* elements showcase" test page) are unaffected. */
+.content-velo-park-test:first-child .vw-parktest { margin-top: 0; }
 
 .vw-parktest__grid {
   display: grid;
@@ -1089,16 +1233,20 @@
 .vw-parktest__lead-block { grid-area: lead; min-width: 0; }
 .vw-parktest__highlights-block { grid-area: highlights; min-width: 0; }
 .vw-parktest__explanation-block { grid-area: explanation; min-width: 0; }
-/* margin-top/bottom come from the global vertical-rhythm rule (colors_and_type.css,
+/* margin-bottom comes from the global vertical-rhythm rule (colors_and_type.css,
    :where(.mod_article, .vw-prose-flow) h1, h2 { ... }) -- that rule already treats h1 and h2
-   identically, so no separate override needed here even though the tag changed. */
+   identically, so no separate override needed here even though the tag changed. margin-top is
+   set explicitly below instead of relying on that rule's own :first-child zero-margin case --
+   this title always sits inside its own top-padded section regardless of where .vw-parktest
+   lands on the page, so it must always be zero, not just when the element happens to be
+   page-first (2026-11-14, see colors_and_type.css for the full story). */
 /* This heading is semantically the page's H1 now (see the template comment for why), but must
    keep the exact visual size it always had as a bare h2 -- the global h1 rule is bigger/bolder
    (clamp(text-4xl,5vw,text-6xl), weight 700) than what this has shown since launch
    (clamp(text-3xl,3.5vw,text-4xl), weight 600). Reuses the design system's own H2 scale
    rather than inventing a new size, so the tag became more semantically correct without any
    visible change. */
-.vw-parktest__title { font-weight: 600; font-size: clamp(var(--text-3xl), 3.5vw, var(--text-4xl)); }
+.vw-parktest__title { margin-top: 0; font-weight: 600; font-size: clamp(var(--text-3xl), 3.5vw, var(--text-4xl)); }
 /* Two-class selectors, not bare .vw-parktest__lead/.vw-highlight-list -- each is the last (or
    only) child of its grid-item wrapper, so the global `p:last-child { margin-bottom: 0 }`
    reset (colors_and_type.css) would otherwise win the lead paragraph's margin on specificity.
@@ -1310,7 +1458,18 @@
    ============================================================ */
 
 .vw-gallery { margin-top: var(--space-7); margin-bottom: var(--space-7); }
-.vw-gallery h2 { margin-bottom: var(--space-4); }
+/* margin-top: 0 explicit, not left to the generic vertical-rhythm rule's :first-child
+   case -- .vw-gallery's own margin-top above already provides this element's top spacing
+   regardless of where it lands on the page, so the heading's margin-top must always be zero,
+   not just when the element happens to be page-first (2026-11-14). */
+.vw-gallery h2 { margin-top: 0; margin-bottom: var(--space-4); }
+/* First-element norm (2026-11-14): the WRAPPER's own margin-top above is a separate concern
+   from the heading fix directly above it -- that one only stops the heading from adding a
+   second, redundant margin on top of this; this one stops this margin-top itself from
+   stacking on .vw-main's own top padding when .vw-gallery happens to be the page's first
+   element (see .content-velo-melde above for the full reasoning). Not yet triggered on any
+   real page, fixed proactively for consistency. */
+.content-velo-gallery:first-child .vw-gallery { margin-top: 0; }
 
 .vw-gallery__body { display: flex; flex-direction: column; gap: var(--space-2); }
 .vw-gallery__main-wrap { min-width: 0; }
@@ -1590,3 +1749,65 @@
    wrapping beside them -- standard, safe pattern, doesn't change .mod_article's own layout
    mode (stays display:block). */
 .mod_article::after { content: ""; display: table; clear: both; }
+
+/* ============================================================
+   SIGNUP (velo_signup) -- Unterstützer-Anmeldung per E-Mail. Aufbau wie das dunkle
+   Newsletter-/Join-Band (2-spaltiges Grid, Text+Icon links, Formular rechts), aber hell, auf
+   Basis von "Variante A4" aus /tmp/velo-unterstuetzer-anmeldung-hell-v2.html. Noch ohne
+   Backend/API -- siehe das Template für die clientseitige Validierung.
+   ============================================================ */
+
+.vw-signup {
+  background: var(--color-surface); border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg); box-shadow: var(--shadow-md);
+  padding: var(--space-6) var(--space-5);
+}
+@media (min-width: 960px) { .vw-signup { padding: var(--space-7); } }
+
+.vw-signup__grid { display: grid; gap: var(--space-6); grid-template-columns: 1fr; }
+@media (min-width: 960px) { .vw-signup__grid { grid-template-columns: 1.3fr 1fr; align-items: start; } }
+
+/* Icon normal im Textfluss, bewusst KEIN absolutes Siegel, das den oberen Rand überschneidet
+   (siehe Nutzer-Vorgabe beim Prototyp: "nicht überschneidend am oberen Rand"). */
+.vw-signup__head { display: flex; align-items: center; gap: var(--space-3); margin-bottom: 2px; }
+.vw-signup__head-text { min-width: 0; }
+.vw-signup__head-text .vw-eyebrow { margin-bottom: 2px; }
+
+.vw-signup__badge {
+  width: 44px; height: 44px; border-radius: var(--radius-full); flex-shrink: 0;
+  background: var(--color-primary-tint); display: flex; align-items: center; justify-content: center;
+}
+.vw-signup__badge i { width: 22px; height: 22px; color: var(--color-primary); }
+
+/* 22px/600 -- wie .vw-card h3 / .vw-melde__heading, nicht die globale H2-Stufe: diese
+   Überschrift steht immer unter der Seiten-H1 (velo_lead) und soll klar als deren Unterpunkt
+   lesen, nicht als eigene grosse Schlagzeile (Nutzer-Feedback, 2026-11-14). */
+.vw-signup__heading { font: 600 var(--text-xl) var(--font-display); margin: 0; }
+
+.vw-signup__lead { color: var(--color-text-muted); margin-top: var(--space-3); max-width: 440px; }
+
+.vw-signup__firma-link {
+  display: inline-flex; align-items: center; gap: 6px; margin-top: var(--space-5);
+  font: 500 var(--text-sm) var(--font-body); color: var(--color-text-muted); text-decoration: none;
+}
+.vw-signup__firma-link:hover { color: var(--color-primary); text-decoration: underline; }
+.vw-signup__firma-link i { width: 16px; height: 16px; }
+
+.vw-signup__form .field-label:not(:first-child) { margin-top: var(--space-4); }
+.vw-signup__form .vw-btn { margin-top: var(--space-5); }
+.vw-signup__form .field-note { margin-top: var(--space-3); }
+
+.vw-signup__captcha-row { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
+.vw-signup__captcha-question { font: 500 var(--text-base) var(--font-body); white-space: nowrap; }
+.vw-signup__captcha-input { width: 70px !important; flex: 0 0 auto; text-align: center; }
+
+/* [hidden] has the same specificity as .vw-signup__grid's own "display: grid" -- without the
+   extra attribute-on-class selector here, the browser's default [hidden]{display:none} loses
+   that tie against this authored rule and toggling the attribute via JS would silently do
+   nothing (hit this exact bug in the /tmp prototype before porting it here). */
+.vw-signup__grid[hidden] { display: none; }
+
+.vw-signup__success { text-align: center; max-width: 440px; margin: 0 auto; padding: var(--space-4) 0; }
+.vw-signup__success-icon { width: 48px; height: 48px; color: var(--color-success-dark); margin-bottom: var(--space-3); }
+.vw-signup__success-title { font: 600 var(--text-xl) var(--font-display); margin: 0; }
+.vw-signup__success p { color: var(--color-text-muted); margin-top: var(--space-3); }

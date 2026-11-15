@@ -1,0 +1,148 @@
+{# velo_signup content element — Unterstützer-Anmeldung per E-Mail. Basis: "Variante A4" aus
+   /tmp/velo-unterstuetzer-anmeldung-hell-v2.html (heller 2-spaltiger Aufbau wie das dunkle Band,
+   Icon inline neben Eyebrow+Heading). Noch ohne Backend/API -- das <script> unten prüft
+   E-Mail-Format und Sicherheitsfrage nur im Browser und zeigt dann einen Success-State; sobald es
+   einen echten Endpunkt gibt, ersetzt ein fetch()-Aufruf den direkten liveEl/successEl-Wechsel im
+   submit-Handler (siehe Kommentar dort). Sicherheitsfrage-Text/-Verhalten folgt dem Muster aus
+   VeloWetzikon_Backend (CaptchaChallengeService, velomelder-gelbes-band.html), Success-Text ist
+   dessen #modal-success-view-Text, auf den Unterstützer-Kontext angepasst. #}
+{% extends '@Contao/content_element/_base.html.twig' %}
+
+{% block content %}
+<section class="vw-section">
+    <div class="vw-container">
+        <div class="vw-signup">
+
+            <div class="vw-signup__grid" data-signup-live>
+                <div class="vw-signup__content">
+                    <div class="vw-signup__head">
+                        <div class="vw-signup__badge"><i data-lucide="heart-handshake" aria-hidden="true"></i></div>
+                        <div class="vw-signup__head-text">
+                            {% if section_eyebrow %}<span class="vw-eyebrow">{{ section_eyebrow }}</span>{% endif %}
+                            {% if section_heading %}<h2 class="vw-signup__heading">{{ section_heading }}</h2>{% endif %}
+                        </div>
+                    </div>
+                    {% if section_lead %}<p class="vw-signup__lead">{{ section_lead }}</p>{% endif %}
+                    {% if btn_secondary_href %}
+                        <a href="{{ btn_secondary_href }}" class="vw-signup__firma-link">
+                            <i data-lucide="building-2" aria-hidden="true"></i>
+                            {{ btn_secondary_label }}
+                        </a>
+                    {% endif %}
+                </div>
+
+                <form class="vw-signup__form" data-signup-form novalidate>
+                    <label class="field-label" for="signup-email-{{ data.id }}">
+                        <span class="required" aria-label="Pflichtfeld">*</span>&nbsp;E-Mail-Adresse
+                    </label>
+                    <input type="email" id="signup-email-{{ data.id }}" name="email" placeholder="deine@email.ch"
+                           autocomplete="email" required aria-describedby="signup-hint-email-{{ data.id }}"
+                           data-signup-email>
+                    <div class="validation-hint" id="signup-hint-email-{{ data.id }}" role="alert" data-signup-hint-email>
+                        Bitte eine gültige E-Mail-Adresse eingeben.
+                    </div>
+
+                    <label class="field-label" for="signup-captcha-{{ data.id }}">
+                        <span class="required" aria-label="Pflichtfeld">*</span>&nbsp;Sicherheitsfrage
+                    </label>
+                    <div class="vw-signup__captcha-row">
+                        <span class="vw-signup__captcha-question" aria-live="polite" data-signup-captcha-question>&hellip;</span>
+                        <input type="text" id="signup-captcha-{{ data.id }}" class="vw-signup__captcha-input"
+                               inputmode="numeric" pattern="[0-9]*" placeholder="?" autocomplete="off"
+                               aria-describedby="signup-hint-captcha-{{ data.id }}" data-signup-captcha>
+                    </div>
+                    <div class="validation-hint" id="signup-hint-captcha-{{ data.id }}" role="alert" data-signup-hint-captcha>
+                        Falsche Antwort. Bitte nochmals versuchen.
+                    </div>
+
+                    <button type="submit" class="vw-btn vw-btn--primary vw-btn--block">{{ btn_primary_label }}</button>
+                    <p class="field-note">Nach dem Absenden musst du deine E-Mail-Adresse bestätigen.</p>
+                </form>
+            </div>
+
+            <div class="vw-signup__success" data-signup-success hidden>
+                <i data-lucide="mail" class="vw-signup__success-icon" aria-hidden="true"></i>
+                <h2 class="vw-signup__success-title">Danke &ndash; bitte bestätigen</h2>
+                <p>Wir haben dir eine E-Mail geschickt. Bitte bestätige deine Anmeldung mit dem Link darin &ndash; danach bist du offiziell Unterstützer:in.</p>
+            </div>
+
+            <!-- Script bewusst INNERHALB von .vw-signup -- document.currentScript.closest(...)
+                 unten sucht nur in Vorfahren/sich selbst, nicht in Geschwistern. -->
+            <script>
+(function () {
+    var root = document.currentScript.closest('.vw-signup');
+    if (!root) { return; }
+
+    var liveEl      = root.querySelector('[data-signup-live]');
+    var successEl   = root.querySelector('[data-signup-success]');
+    var form        = root.querySelector('[data-signup-form]');
+    var emailEl     = root.querySelector('[data-signup-email]');
+    var captchaEl   = root.querySelector('[data-signup-captcha]');
+    var questionEl  = root.querySelector('[data-signup-captcha-question]');
+    var hintEmail   = root.querySelector('[data-signup-hint-email]');
+    var hintCaptcha = root.querySelector('[data-signup-hint-captcha]');
+
+    // Serverseitig generiert und geprüft, sobald es ein Backend/API dafür gibt (siehe
+    // CaptchaChallengeService im Backend-Projekt) -- bis dahin rein client-seitig.
+    var expectedAnswer;
+
+    function newCaptcha() {
+        var a = Math.floor(Math.random() * 9) + 1;
+        var b = Math.floor(Math.random() * 9) + 1;
+        expectedAnswer = a + b;
+        questionEl.textContent = 'Was ist ' + a + ' + ' + b + '?';
+        captchaEl.value = '';
+        captchaEl.classList.remove('field-valid', 'field-invalid');
+        hintCaptcha.classList.remove('visible');
+    }
+
+    function isEmailValid() { return emailEl.checkValidity() && emailEl.value.trim() !== ''; }
+    function isCaptchaValid() { return parseInt(captchaEl.value, 10) === expectedAnswer; }
+
+    function applyFieldState(el, ok, hintEl) {
+        el.classList.toggle('field-valid', ok);
+        el.classList.toggle('field-invalid', !ok);
+        if (hintEl) { hintEl.classList.toggle('visible', !ok); }
+    }
+
+    emailEl.addEventListener('blur', function () {
+        if (emailEl.value.trim() === '') { emailEl.classList.remove('field-valid', 'field-invalid'); hintEmail.classList.remove('visible'); return; }
+        applyFieldState(emailEl, isEmailValid(), hintEmail);
+    });
+    emailEl.addEventListener('input', function () {
+        if (emailEl.classList.contains('field-invalid')) { applyFieldState(emailEl, isEmailValid(), hintEmail); }
+    });
+
+    captchaEl.addEventListener('blur', function () {
+        if (captchaEl.value.trim() === '') { captchaEl.classList.remove('field-valid', 'field-invalid'); hintCaptcha.classList.remove('visible'); return; }
+        applyFieldState(captchaEl, isCaptchaValid(), hintCaptcha);
+    });
+    captchaEl.addEventListener('input', function () {
+        if (captchaEl.classList.contains('field-invalid')) { applyFieldState(captchaEl, isCaptchaValid(), hintCaptcha); }
+    });
+
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var emailOk = isEmailValid();
+        var captchaOk = isCaptchaValid();
+        applyFieldState(emailEl, emailOk, hintEmail);
+        applyFieldState(captchaEl, captchaOk, hintCaptcha);
+
+        if (!emailOk) { emailEl.focus(); return; }
+        if (!captchaOk) { captchaEl.focus(); return; }
+
+        // Noch kein echtes Backend -- sobald ein API-Endpunkt existiert, kommt hier ein
+        // fetch()-Aufruf hin, der den Success-State erst bei dessen Erfolg zeigt (und bei
+        // einem Fehler stattdessen einen Server-Fehlertext anzeigt).
+        liveEl.hidden = true;
+        successEl.hidden = false;
+    });
+
+    newCaptcha();
+}());
+            </script>
+
+        </div>
+    </div>
+</section>
+{% endblock %}

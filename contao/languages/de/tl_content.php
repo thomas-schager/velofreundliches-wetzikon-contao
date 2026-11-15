@@ -15,3 +15,5 @@ $GLOBALS['TL_LANG']['tl_content']['criteria_legend'] = 'Kriterien';
 $GLOBALS['TL_LANG']['tl_content']['map_legend'] = 'Karte';
 $GLOBALS['TL_LANG']['tl_content']['melde_legend'] = 'Details';
 $GLOBALS['TL_LANG']['tl_content']['lead_legend'] = 'Lead-Text';
+$GLOBALS['TL_LANG']['tl_content']['steps_legend'] = 'Schritte';
+$GLOBALS['TL_LANG']['tl_content']['levels_legend'] = 'Level-Karten';

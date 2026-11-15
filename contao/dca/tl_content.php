@@ -24,6 +24,29 @@ $GLOBALS['TL_DCA']['tl_content']['palettes']['velo_lead'] =
     '{lead_legend},velo_eyebrow,velo_lead;'.
     '{invisible_legend:hide},invisible,start,stop';
 
+$GLOBALS['TL_DCA']['tl_content']['palettes']['velo_steps'] =
+    '{type_legend},type;'.
+    '{section_legend},velo_section_eyebrow,velo_section_heading;'.
+    '{steps_legend},velo_steps;'.
+    '{invisible_legend:hide},invisible,start,stop';
+
+$GLOBALS['TL_DCA']['tl_content']['palettes']['velo_levels'] =
+    '{type_legend},type;'.
+    '{section_legend},velo_section_eyebrow,velo_section_heading,velo_section_lead;'.
+    '{levels_legend},velo_levels;'.
+    '{invisible_legend:hide},invisible,start,stop';
+
+// Prototyped in /tmp as "Variante A4" (velo-unterstuetzer-anmeldung-hell-v2.html) -- email +
+// Sicherheitsfrage signup form, frontend-only validation for now (see velo_signup.html.twig's
+// inline <script>), no backend/API call yet. velo_btn_secondary_label/_page (normally the
+// hero's "secondary button") double as the "Als Firma/Organisation anmelden" link here -- same
+// shape (label + page target), no need for a dedicated field pair.
+$GLOBALS['TL_DCA']['tl_content']['palettes']['velo_signup'] =
+    '{type_legend},type;'.
+    '{section_legend},velo_section_eyebrow,velo_section_heading,velo_section_lead;'.
+    '{buttons_legend},velo_btn_primary_label,velo_btn_secondary_label,velo_btn_secondary_page;'.
+    '{invisible_legend:hide},invisible,start,stop';
+
 $GLOBALS['TL_DCA']['tl_content']['palettes']['velo_positions'] =
     '{type_legend},type;'.
     '{section_legend},velo_section_eyebrow,velo_section_heading,velo_section_lead;'.
@@ -265,6 +288,61 @@ $GLOBALS['TL_DCA']['tl_content']['fields']['velo_cards'] = [
             'body'       => ['label' => 'Text', 'inputType' => 'text', 'eval' => ['style' => 'width:200px']],
             'href'       => ['label' => 'Link-URL', 'inputType' => 'text', 'eval' => ['style' => 'width:140px']],
             'link_label' => ['label' => 'Link-Text', 'inputType' => 'text', 'eval' => ['style' => 'width:120px']],
+        ],
+        'tl_class' => 'clr',
+    ],
+    'sql'  => 'blob NULL',
+];
+
+// ============================================================
+// velo_steps specific
+// ============================================================
+
+/* Numbered "how it works" steps (01, 02, ...) -- the numeral itself isn't editable, it's derived
+   from the item's position in the list (see VeloStepsController), so editors only maintain icon/
+   title/text and reordering the rows renumbers them automatically. */
+$GLOBALS['TL_DCA']['tl_content']['fields']['velo_steps'] = [
+    'label'     => ['Schritte', 'Nummerierte Schritte (01, 02, ...) mit Icon, Titel und Text'],
+    'inputType' => 'multiColumnWizard',
+    'eval'      => [
+        'minCount'     => 1,
+        'maxCount'     => 6,
+        'columnFields' => [
+            'icon'  => ['label' => 'Icon (Lucide)', 'inputType' => 'text', 'eval' => ['style' => 'width:120px']],
+            'title' => ['label' => 'Titel', 'inputType' => 'text', 'eval' => ['style' => 'width:200px']],
+            'body'  => ['label' => 'Text', 'inputType' => 'text', 'eval' => ['style' => 'width:320px']],
+        ],
+        'tl_class' => 'clr',
+    ],
+    'sql'  => 'blob NULL',
+];
+
+// ============================================================
+// velo_levels specific
+// ============================================================
+
+/* Unterstützer-Level-Karten (velo_levels) -- Basis: das "Jeder Input ist wertvoll"-Konzept.
+   "Dunkel" und "Roter Streifen oben" mappen im Controller/Template auf bestehende Klassen
+   (.vw-card--dark bzw. das bereits vorhandene .vw-card--campaign) statt neuer, separater
+   Varianten -- keine Eyebrow und kein Tag pro Karte (bewusst, siehe Template). */
+$GLOBALS['TL_DCA']['tl_content']['fields']['velo_levels'] = [
+    'label'     => ['Level-Karten', 'Bis zu 4 Karten: Icon, Titel, Untertitel, Kriterien (eine Zeile pro Punkt)'],
+    'inputType' => 'multiColumnWizard',
+    'eval'      => [
+        'minCount'     => 1,
+        'maxCount'     => 4,
+        'columnFields' => [
+            'icon'     => ['label' => 'Icon (Lucide)', 'inputType' => 'text', 'eval' => ['style' => 'width:100px']],
+            'variant'  => [
+                'label'     => 'Darstellung',
+                'inputType' => 'select',
+                'options'   => ['light' => 'Hell', 'dark' => 'Dunkel'],
+                'eval'      => ['style' => 'width:80px', 'includeBlankOption' => false],
+            ],
+            'stripe'   => ['label' => 'Roter Streifen oben', 'inputType' => 'checkbox', 'eval' => ['style' => 'width:60px']],
+            'title'    => ['label' => 'Titel', 'inputType' => 'text', 'eval' => ['style' => 'width:160px']],
+            'subtitle' => ['label' => 'Untertitel', 'inputType' => 'text', 'eval' => ['style' => 'width:200px']],
+            'items'    => ['label' => 'Kriterien (1 pro Zeile)', 'inputType' => 'textarea', 'eval' => ['style' => 'width:260px', 'rows' => 3]],
         ],
         'tl_class' => 'clr',
     ],

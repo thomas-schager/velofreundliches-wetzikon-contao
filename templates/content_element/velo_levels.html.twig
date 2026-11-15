@@ -1,0 +1,50 @@
+{# velo_levels content element — Unterstützer-Level-Karten (Basis: Konzept "Jeder Input ist
+   wertvoll"). Pro Karte: Icon, Titel, Untertitel, Kriterien-Liste. Keine Eyebrow und kein Tag auf
+   der Karte -- bewusst weggelassen. "Dunkel" nutzt .vw-card--dark, "Roter Streifen oben" nutzt
+   das bereits bestehende .vw-card--campaign, beides keine neuen, separaten Komponenten. #}
+{% extends '@Contao/content_element/_base.html.twig' %}
+
+{% block content %}
+<section class="vw-section">
+    <div class="vw-container">
+        {% if section_eyebrow or section_heading or section_lead %}
+            <div class="vw-heading">
+                {% if section_eyebrow %}
+                    <span class="vw-eyebrow">{{ section_eyebrow }}</span>
+                {% endif %}
+                {% if section_heading %}
+                    <h2>{{ section_heading }}</h2>
+                {% endif %}
+                {% if section_lead %}
+                    <p class="vw-lead">{{ section_lead }}</p>
+                {% endif %}
+            </div>
+        {% endif %}
+
+        <div class="vw-cards-3">
+            {% for level in levels %}
+                <div class="vw-card{% if level.variant == 'dark' %} vw-card--dark{% endif %}{% if level.stripe %} vw-card--campaign{% endif %}">
+                    {% if level.icon %}
+                        <div class="vw-card__icon">
+                            <i data-lucide="{{ level.icon }}" width="32" height="32" aria-hidden="true"></i>
+                        </div>
+                    {% endif %}
+                    {% if level.title %}
+                        <h3>{{ level.title }}</h3>
+                    {% endif %}
+                    {% if level.subtitle %}
+                        <p class="vw-card__sub">{{ level.subtitle }}</p>
+                    {% endif %}
+                    {% if level.items %}
+                        <ul class="vw-check-list{% if level.variant != 'dark' %} vw-check-list--light{% endif %}">
+                            {% for item in level.items %}
+                                <li>{{ item }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,38 @@
+{# velo_steps content element — numbered "how it works" steps (01, 02, ...), 2-up grid #}
+{% extends '@Contao/content_element/_base.html.twig' %}
+
+{% block content %}
+<section class="vw-section">
+    <div class="vw-container">
+        {% if section_eyebrow or section_heading %}
+            <div class="vw-heading">
+                {% if section_eyebrow %}
+                    <span class="vw-eyebrow">{{ section_eyebrow }}</span>
+                {% endif %}
+                {% if section_heading %}
+                    <h2>{{ section_heading }}</h2>
+                {% endif %}
+            </div>
+        {% endif %}
+
+        <div class="vw-steps">
+            {% for step in steps %}
+                <div class="vw-step">
+                    <div class="vw-step__num">{{ step.number }}</div>
+                    <div class="vw-step__body">
+                        <h3>
+                            {% if step.icon %}
+                                <i data-lucide="{{ step.icon }}" width="20" height="20" aria-hidden="true"></i>
+                            {% endif %}
+                            {{ step.title }}
+                        </h3>
+                        {% if step.body %}
+                            <p>{{ step.body }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}
