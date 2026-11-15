@@ -552,7 +552,12 @@
   width: 48px;
 }
 
-.vw-step__body h3 { display: flex; align-items: center; gap: 8px; margin-bottom: var(--space-2); font-size: var(--text-xl); }
+/* margin-top: 0 explicit, not left to the generic vertical-rhythm rule's :first-child case --
+   this h3 is always the first (and only) child of its own .vw-step__body regardless of where
+   velo_steps lands on the page, same category as .vw-parktest__title/.vw-gallery h2 above, just
+   found later: a per-item heading inside a repeating grid never needs page-position-dependent
+   spacing, it always sits flush against its own number/icon (2026-11-15). */
+.vw-step__body h3 { display: flex; align-items: center; gap: 8px; margin-top: 0; margin-bottom: var(--space-2); font-size: var(--text-xl); }
 .vw-step__body h3 i,
 .vw-step__body h3 svg { color: var(--color-primary); flex-shrink: 0; }
 .vw-step__body p { color: var(--color-text-muted); }
