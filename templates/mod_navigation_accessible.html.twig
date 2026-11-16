@@ -17,12 +17,13 @@
 
     {# "Feedback gelbes Band" CTA — hidden on mobile (in drawer), shown on desktop. Links out to
        the VeloMelder backend app (separate project/repo), not the local "Stelle melden" modal
-       (that's still used elsewhere, e.g. the velo_melde content element's own button). Host is
-       environment-configurable -- see VELOMELDER_BACKEND_HOST in .env / config/config.yaml --
-       so this doesn't need a code change once a real production backend host exists. #}
-    <a href="https://{{ velomelder_backend_host }}/velomelder-gelbes-band.html" target="_blank" rel="noopener"
+       (that's still used elsewhere, e.g. the velo_melde content element's own button). Origin
+       (scheme + host) is environment-configurable -- see VELOMELDER_BACKEND_ORIGIN in .env /
+       config/config.yaml -- so this doesn't need a code change once a real production backend
+       host exists, and a local backend served over plain HTTP works too. #}
+    <a href="{{ velomelder_backend_origin }}/velomelder-gelbes-band.html" target="_blank" rel="noopener"
        class="vw-btn vw-btn--primary vw-btn--sm vw-nav__cta">
-        <i data-lucide="map-pin" width="16" height="16" aria-hidden="true"></i>
+        <i data-lucide="map-pin-plus" width="16" height="16" aria-hidden="true"></i>
         Feedback gelbes Band
     </a>
 
@@ -59,9 +60,9 @@
         <div class="vw-drawer__scroll">
             {{ items|raw }}
         </div>
-        <a href="https://{{ velomelder_backend_host }}/velomelder-gelbes-band.html" target="_blank" rel="noopener"
+        <a href="{{ velomelder_backend_origin }}/velomelder-gelbes-band.html" target="_blank" rel="noopener"
            class="vw-btn vw-btn--primary">
-            <i data-lucide="map-pin" width="16" height="16" aria-hidden="true"></i>
+            <i data-lucide="map-pin-plus" width="16" height="16" aria-hidden="true"></i>
             Feedback gelbes Band
         </a>
     </div>

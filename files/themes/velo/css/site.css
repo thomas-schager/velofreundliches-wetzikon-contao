@@ -457,18 +457,44 @@
    latent bug as the others -- found via a full audit after fixing those. */
 .content-velo-melde:first-child .vw-melde { padding-top: 0; }
 
+/* overflow:hidden here (not on .vw-melde__map) is what rounds the map's otherwise-square edges
+   to match the card -- the map has no border-radius of its own, it just bleeds to this box's
+   edges and gets clipped by it. No padding here either: padding moved onto .vw-melde__text only
+   (see below), so when a map preview is present (.vw-melde__card--with-map, set in the Twig
+   template whenever melde_card_path resolves) it can sit flush against the card's own top/right/
+   bottom with no second inset -- only .vw-melde__text's padding + this flex container's own gap
+   separate it from the text, on the one side that needs it. */
 .vw-melde__card {
   background: #fff;
   border: 1px solid var(--color-border);
   border-radius: 8px;
-  padding: 24px 28px;
-  display: grid;
-  grid-template-columns: 1fr;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
   gap: 24px;
-  align-items: center;
 }
+.vw-melde__text { padding: 24px 28px; }
+/* Bottom inset dropped -- the flex gap above already separates the text from the map stacked
+   below it on mobile; keeping both would double that spacing. Plain .vw-melde__card (no map,
+   melde_card_path unresolved) never gets this modifier, so it keeps the full inset on every
+   side. */
+.vw-melde__card--with-map .vw-melde__text { padding-bottom: 0; }
+
 @media (min-width: 720px) {
-  .vw-melde__card { grid-template-columns: 1fr auto; }
+  /* Text column keeps a bit more room than the map -- same 1.3fr/1fr ratio used for the other
+     text+map pairing in this codebase (velo_park_test's Leaflet card, see that component). */
+  .vw-melde__card--with-map {
+    flex-direction: row;
+    align-items: stretch;
+  }
+  /* Right inset dropped here instead of bottom -- same reasoning as above, just rotated: the gap
+     now separates text from the map to its right, not below it. */
+  .vw-melde__card--with-map .vw-melde__text {
+    flex: 1.3;
+    padding-bottom: 24px;
+    padding-right: 0;
+  }
+  .vw-melde__card--with-map .vw-melde__map { flex: 1; aspect-ratio: auto; }
 }
 
 .vw-melde__heading {
@@ -484,7 +510,27 @@
   max-width: 640px;
 }
 
+.vw-melde__btn { margin-top: var(--space-4); }
 .vw-melde__btn .vw-btn { white-space: nowrap; }
+
+/* Live preview of the linked Meldekarte, embedded via its own ?embed mode (no header/zoom
+   control/layer-switch there -- see velomelder-gelbes-band.html in VeloWetzikon_Backend). Only
+   a preview: every click inside it opens the full map in a new tab (that's handled on the
+   embedded page itself, not here), so this card needs no Leaflet instance or toggle UI of its
+   own, unlike .vw-parktest__map above. Sized by aspect-ratio on mobile (stacked, nothing to
+   stretch against); flex+stretch takes over at 720px instead (see above), filling the row's
+   full height to match the text column exactly rather than an independent ratio. */
+.vw-melde__map {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  flex-shrink: 0;
+}
+.vw-melde__map iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: none;
+}
 
 /* ============================================================
    POSITIONS / CARDS GRID
