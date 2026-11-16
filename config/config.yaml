@@ -3,7 +3,12 @@
 # ContaoKernel::registerContainerConfiguration()/getConfigFile() in vendor/contao/manager-bundle.
 #
 # Exposes environment-specific values to Twig templates as globals, so templates can read e.g.
-# {{ velomelder_backend_host }} without needing a dedicated controller just to pass one string.
+# {{ velomelder_backend_origin }} without needing a dedicated controller just to pass one string.
+# Holds the full origin (scheme + host, e.g. "https://test-backend.velofreundliches-wetzikon.ch"
+# or "http://localhost:8001" for a local backend dev server) -- NOT just a bare host. A bare host
+# forced every template to hardcode "https://" in front of it, which silently broke any local
+# backend served over plain HTTP (TLS handshake against a non-TLS port, which Firefox/Chrome
+# surface as a blocked/failed request).
 twig:
     globals:
-        velomelder_backend_host: '%env(VELOMELDER_BACKEND_HOST)%'
+        velomelder_backend_origin: '%env(VELOMELDER_BACKEND_ORIGIN)%'
