@@ -73,8 +73,27 @@ confirm_word() {
 # even the vendor autoloader) boots, see that file. More robust than the Backend's .htaccess
 # swap: it works even if the deploy that's currently in flight has left the app in a half-broken
 # state, since it doesn't depend on anything booting correctly.
+#
+# That promise only holds if the compiled container can actually boot, though -- and this runs
+# right after rsync, before cache:clear ever gets a chance to rebuild it (see deploy.sh's call
+# site). var/ is excluded from every deploy rsync, so whatever container was compiled under the
+# *previous* deploy's code/.env survives on disk across the new code landing. Most of the time
+# that's harmless (an old-but-still-valid container just gets used for a few more seconds until
+# cache:clear replaces it) -- but a change that the old container can no longer satisfy (e.g. an
+# env var the new code no longer defines, renamed in .env/config.yaml) makes it fail to boot at
+# all, with the kernel erroring on the missing/renamed env var. That's happened for real: renaming
+# VELOMELDER_BACKEND_HOST to VELOMELDER_BACKEND_ORIGIN broke this exact command in production,
+# because the stale container still referenced the old name.
+#
+# Fix: blow away the compiled container first, via plain `rm -rf` -- filesystem-only, no PHP/
+# Symfony boot involved, so it can't itself fail the same way. That forces the very next
+# bin/console call (this one) to recompile fresh against whatever code/.env is actually on disk
+# right now, which is internally consistent by construction. cache:clear a few steps later
+# recompiles again -- redundant work, but cheap, and the only way to make this command's original
+# "works even if the deploy currently in flight has left the app half-broken" promise actually true.
 enter_maintenance() {
     local base_path="$1"
+    "${SSH[@]}" "rm -rf '$base_path'/var/cache/*"
     "${SSH[@]}" "cd '$base_path' && $REMOTE_PHP_BIN bin/console contao:maintenance-mode enable --no-interaction"
 }
 
