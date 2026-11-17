@@ -1802,6 +1802,47 @@
 .mod_article::after { content: ""; display: table; clear: both; }
 
 /* ============================================================
+   NATIVE TEXT ELEMENT -- image + rich text (content-text). Contao core ships the
+   .media/.media--left/right/above/below layout classes with no CSS of its own (see
+   vendor/contao/core-bundle's content_element/text.html.twig) -- float and sizing are entirely
+   up to the theme, which never had any rules for these classes: an image here rendered at its
+   full native pixel size, full width, with the float classes present but doing nothing.
+   ============================================================ */
+
+.content-text figure { margin: 0; }
+.content-text figure img { border-radius: var(--radius-md); }
+
+/* Clearfix scoped to this element, not just .mod_article (above) -- the image float below is
+   internal to .content-text (the rich text wraps around it in normal flow), so the *next*
+   content element right after this one needs protecting too, not just the article's total
+   height. */
+.content-text::after { content: ""; display: table; clear: both; }
+
+.content-text.media--left figure,
+.content-text.media--right figure {
+  max-width: min(360px, 45%);
+  margin-bottom: var(--space-4);
+}
+.content-text.media--left figure { float: left; margin-right: var(--space-5); }
+.content-text.media--right figure { float: right; margin-left: var(--space-5); }
+
+.content-text.media--above figure { margin-bottom: var(--space-5); }
+.content-text.media--below figure { margin-top: var(--space-5); }
+
+/* Narrow viewports: a half-width floated image squeezed next to text gets cramped fast --
+   stack instead, same breakpoint as the rest of the theme's mobile-first switches. */
+@media (max-width: 599px) {
+  .content-text.media--left figure,
+  .content-text.media--right figure {
+    float: none;
+    max-width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+    margin-bottom: var(--space-4);
+  }
+}
+
+/* ============================================================
    SIGNUP (velo_signup) -- Unterstützer-Anmeldung per E-Mail. Aufbau wie das dunkle
    Newsletter-/Join-Band (2-spaltiges Grid, Text+Icon links, Formular rechts), aber hell, auf
    Basis von "Variante A4" aus /tmp/velo-unterstuetzer-anmeldung-hell-v2.html. Noch ohne
