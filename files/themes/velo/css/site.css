@@ -683,9 +683,22 @@
 }
 .vw-news__card:hover { box-shadow: var(--shadow-md); }
 
+/* Fixed box, every card the same shape regardless of the source image's own proportions --
+   object-fit:cover scales the image to fill the box and crops the overflow, keeping its
+   proportions intact (fill was tried first -- stretched/distorted any image not already 16/9,
+   e.g. a portrait photo squashed sideways -- cropping without distortion reads much better).
+   No hover zoom (removed the transform/transition pair that used to scale the image up on
+   :hover).
+   Contao's image include wraps the <img> in <figure class="image_container"><a>...-- the
+   browser's UA stylesheet gives <figure> a default 1em 40px margin, which was shrinking it well
+   below .vw-news__img's own width; object-fit:fill on the <img> then had nothing to fill
+   (its containing block was that shrunk figure, not this box), so it just rendered at the
+   image's own natural ratio instead. Every link in that chain needs to actually fill this box,
+   not just the <img> itself. */
 .vw-news__img { aspect-ratio: 16/9; overflow: hidden; }
-.vw-news__img img { width: 100%; height: 100%; object-fit: cover; transition: transform var(--dur-slow) var(--ease); }
-.vw-news__card:hover .vw-news__img img { transform: scale(1.03); }
+.vw-news__img figure { margin: 0; width: 100%; height: 100%; }
+.vw-news__img figure a { display: block; width: 100%; height: 100%; }
+.vw-news__img img { display: block; width: 100%; height: 100%; object-fit: cover; }
 
 .vw-news__body { flex: 1; display: flex; flex-direction: column; gap: var(--space-3); padding: var(--space-5); }
 .vw-news__meta { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
@@ -694,7 +707,20 @@
 .vw-news__title { font: 600 18px/1.3 var(--font-display); color: #000; text-decoration: none; letter-spacing: var(--tracking-tight); }
 .vw-news__title:hover { color: var(--color-primary); }
 
-.vw-news__teaser { font: 400 14px/1.55 var(--font-body); color: var(--color-text-muted); flex: 1; }
+/* One sentence, enforced twice: news_latest.html.twig already cuts the teaser down to its first
+   sentence before rendering, and this line-clamp is the CSS-side backstop in case that
+   "sentence" still runs long (no period in the source text, a very long single sentence, etc.)
+   -- clamped to 2 lines rather than 1, so a short sentence that merely wraps on a narrow card
+   isn't cut off mid-word. */
+.vw-news__teaser {
+  font: 400 14px/1.55 var(--font-body);
+  color: var(--color-text-muted);
+  flex: 1;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
 
 .vw-news__link { display: inline-flex; align-items: center; gap: 6px; font: 500 14px var(--font-body); color: var(--color-primary); text-decoration: none; margin-top: auto; }
 .vw-news__link:hover { text-decoration: underline; }

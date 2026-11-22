@@ -205,6 +205,18 @@ h6 { font-weight: 500; font-size: var(--text-xs);  line-height: var(--lh-snug); 
 :where(.vw-prose-flow) h5:first-child,
 :where(.vw-prose-flow) h6:first-child { margin-top: 0; }
 
+/* Native "Überschrift" content element (type=headline) is structurally different from every
+   other content element: Contao's own template has NO wrapper div for it at all (see
+   content_element/headline.html.twig's own comment: "The headline content element does not
+   have a wrapper element") -- the content-headline class sits directly on the heading tag
+   itself. The two-level "wrapper > h1:first-child" selector above can never match it, since
+   there's no separate wrapper to be .mod_article's :first-child while the h1 is ITS
+   :first-child -- they're the same element. Found on /news (2026-11-22): a bare headline
+   element placed first on the page still carried its full margin-top, double-spaced against
+   .vw-main's own top padding same as every other case this norm covers, just via a shape the
+   generic selector couldn't see. */
+.mod_article > :is(h1, h2, h3, h4, h5, h6).content-headline:first-child { margin-top: 0; }
+
 /* A plain <h1> rendered via Contao's native "Überschrift" field (no .vw-heading wrapper, e.g. a
    bare "text" content element used as a page title) should read as an ordinary page title --
    same tier as .vw-heading h1 above -- not inherit the bare global h1 rule's clamp(--text-4xl,
