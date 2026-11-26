@@ -1,0 +1,38 @@
+{# velo_news_showcase content element — a larger, richer single-article preview than the
+   regular .vw-news__card grid: full (untruncated) rich-text teaser instead of a one-sentence
+   excerpt (headers/paragraphs/images an editor placed via TinyMCE render as-is), image
+   bleeding flush on the left instead of a capped 16:9 strip on top. Either the latest item
+   across every news category or one hand-picked article -- see
+   VeloNewsShowcaseController for the selection/fallback logic. #}
+{% extends '@Contao/content_element/_base.html.twig' %}
+
+{% block content %}
+    {% if headline %}
+        <div class="vw-news-showcase">
+            {% if img %}
+                {# JS-navigated, not a native href -- the h3 title link below is the only
+                   crawlable <a> to the article (see data-nav-href handling in
+                   page/layout/velo.html.twig). #}
+                <button type="button" class="vw-news-showcase__img" data-nav-href="{{ link }}" aria-label="Weiterlesen: {{ headline }}">
+                    <img src="{{ img.src }}"{% if img.srcset %} srcset="{{ img.srcset }}"{% endif %} width="{{ img.width }}" height="{{ img.height }}" alt="{{ img_alt }}">
+                </button>
+            {% endif %}
+            <div class="vw-news-showcase__body">
+                <div class="vw-news-showcase__meta">
+                    <time datetime="{{ datetime }}" class="vw-news-showcase__date">{{ date }}</time>
+                    {% if archive_title %}
+                        <span class="vw-tag vw-tag--neutral">{{ archive_title }}</span>
+                    {% endif %}
+                </div>
+                <h3 class="vw-news-showcase__title"><a href="{{ link }}">{{ headline }}</a></h3>
+                {% if teaser %}
+                    <div class="vw-news-showcase__teaser">{{ teaser|raw }}</div>
+                {% endif %}
+                <button type="button" class="vw-btn vw-btn--primary vw-news-showcase__cta" data-nav-href="{{ link }}">
+                    Weiterlesen
+                    <i data-lucide="arrow-right" width="16" height="16" aria-hidden="true"></i>
+                </button>
+            </div>
+        </div>
+    {% endif %}
+{% endblock %}

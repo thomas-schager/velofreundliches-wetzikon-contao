@@ -697,7 +697,21 @@
    not just the <img> itself. */
 .vw-news__img { aspect-ratio: 16/9; overflow: hidden; }
 .vw-news__img figure { margin: 0; width: 100%; height: 100%; }
-.vw-news__img figure a { display: block; width: 100%; height: 100%; }
+/* <button>, not <a> -- see news_latest/news_short.html.twig: the image is a JS-navigated
+   pseudo-link (no crawlable href), so it needs the same UA-style reset a plain <a> never
+   needed (border/padding/background/font/text-align) on top of the same fill-the-box rule. */
+.vw-news__img figure button {
+  display: block;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
 .vw-news__img img { display: block; width: 100%; height: 100%; object-fit: cover; }
 
 .vw-news__body { flex: 1; display: flex; flex-direction: column; gap: var(--space-3); padding: var(--space-5); }
@@ -722,8 +736,106 @@
   overflow: hidden;
 }
 
-.vw-news__link { display: inline-flex; align-items: center; gap: 6px; font: 500 14px var(--font-body); color: var(--color-primary); text-decoration: none; margin-top: auto; }
+/* <button>, not <a> -- see news_latest/news_short.html.twig: looks and behaves like the card's
+   link, but carries no crawlable href (JS-navigated via data-nav-href), so it needs the same
+   UA-style button reset as .vw-news__img figure button above. */
+.vw-news__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font: 500 14px var(--font-body);
+  color: var(--color-primary);
+  text-decoration: none;
+  margin: 0;
+  margin-top: auto;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
 .vw-news__link:hover { text-decoration: underline; }
+
+/* ============================================================
+   NEWS SHOWCASE (velo_news_showcase) -- one larger, richer article preview: the full,
+   untruncated rich-text teaser instead of the card grid's one-sentence excerpt. Image sits in
+   its own inset box (margin on every side, not bleeding to the card edge), fixed-width column
+   on desktop, height following the image's own ratio rather than being cropped to a fixed box.
+   Either the latest item across every category or one hand-picked article -- see
+   VeloNewsShowcaseController.
+   ============================================================ */
+
+/* Stays within the normal reading column, same width as every other element on the page --
+   unlike most other velo_* sections, this one should never go full-bleed, so cancel the
+   generic breakout rule near the top of this file ([class*="content-velo-"] { margin-inline:
+   calc(-1 * var(--gutter)); } ). Same precedent as .content-velo-feature-photo above. */
+.content-velo-news-showcase { margin-inline: 0; }
+
+.vw-news-showcase {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-5);
+  margin-top: var(--space-6);
+  margin-bottom: var(--space-7);
+}
+/* First-element norm (see .vw-hero/.vw-melde/.vw-section etc.): relies entirely on .vw-main's
+   own top padding when first, instead of stacking its own margin-top on top of it. */
+.content-velo-news-showcase:first-child .vw-news-showcase { margin-top: 0; }
+
+/* Own inset box, not a bleeding edge-to-edge strip -- the card's own padding above already
+   gives it margin on every side. height:auto (no aspect-ratio/object-fit) so a portrait source
+   stays portrait and a landscape source stays landscape, instead of all images being cropped
+   into one fixed shape like the regular .vw-news__card grid.
+   <button>, not <a> -- see velo_news_showcase.html.twig: JS-navigated (data-nav-href), no
+   crawlable href, so it needs the same UA-style reset as .vw-news__img figure button. */
+.vw-news-showcase__img {
+  display: block;
+  flex-shrink: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+.vw-news-showcase__img img { display: block; width: 100%; height: auto; }
+
+.vw-news-showcase__body { display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; }
+.vw-news-showcase__meta { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
+.vw-news-showcase__date { font: 400 var(--text-sm) var(--font-body); color: var(--color-text-muted); }
+.vw-news-showcase__title { font: 600 26px/1.25 var(--font-display); color: #000; margin: 0; letter-spacing: var(--tracking-tight); }
+/* The title text is now the one native <a href> to the article (see
+   velo_news_showcase.html.twig) -- override the global `a` rule's underline/primary-color so
+   it still reads exactly like the plain heading it replaced, with the same hover feedback as
+   .vw-news__title in the card grid. */
+.vw-news-showcase__title a { color: inherit; text-decoration: none; }
+.vw-news-showcase__title a:hover { color: var(--color-primary); }
+
+.vw-news-showcase__teaser { color: var(--color-text-muted); font: 400 var(--text-base)/1.6 var(--font-body); }
+.vw-news-showcase__teaser p { margin: 0 0 var(--space-3); }
+.vw-news-showcase__teaser p:last-child { margin-bottom: 0; }
+.vw-news-showcase__teaser h1,
+.vw-news-showcase__teaser h2,
+.vw-news-showcase__teaser h3 { margin: var(--space-4) 0 var(--space-2); font: 600 var(--text-xl) var(--font-display); color: #000; }
+.vw-news-showcase__teaser img { display: block; max-width: 100%; height: auto; border-radius: var(--radius-sm); margin: var(--space-3) 0; }
+
+/* .vw-btn is only ever full-width via the explicit --block modifier (see BUTTONS); opt out of
+   the flex column's default align-items:stretch so it stays sized to its own content here. */
+.vw-news-showcase__cta { align-self: flex-start; }
+
+@media (min-width: 720px) {
+  .vw-news-showcase { flex-direction: row; align-items: flex-start; }
+  /* Fixed-width column (~25% of the card), left-aligned -- not flex:1/stretch, so its width
+     stays constant regardless of how tall the text column ends up. */
+  .vw-news-showcase__img { flex: 0 0 25%; width: 25%; }
+  .vw-news-showcase__body { flex: 1; }
+}
 
 /* ============================================================
    JOIN BLOCK (dark)
@@ -1247,7 +1359,13 @@
    (2026-11-15). :is() lets a side accept either wrapper shape without writing the whole rule
    twice; mod_* elements are never content-velo-* themselves so the receiving-side exclusion
    doesn't need to repeat that check for them. */
-.mod_article > :is([class*="content-"], [class^="mod_"])
+/* .layout_full (news reader, news_full.html.twig) gets the same treatment as .mod_article
+   itself -- its content elements (or a linked article's, via the ce_text fallback branch) sit
+   one level deeper (.mod_article > .mod_newsreader > .layout_full > ...), so the plain
+   ".mod_article >" shape above never matched them, leaving content-velo-lead/content-text/
+   content-image flush against each other with no gap at all (found on an actual news article
+   detail page, 2026-11-26). */
+:where(.mod_article, .layout_full) > :is([class*="content-"], [class^="mod_"])
   + :is([class*="content-"], [class^="mod_"]):not([class*="content-velo-"]) { margin-top: var(--space-6); }
 
 /* Contao article default */

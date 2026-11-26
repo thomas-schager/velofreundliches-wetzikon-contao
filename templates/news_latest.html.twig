@@ -1,8 +1,18 @@
-{# News latest item — .vw-news__card layout #}
+{# News latest item — .vw-news__card layout. The headline is the only native <a href> to the
+   article (meaningful anchor text for crawlers/SEO); the image and "Weiterlesen" are
+   JS-navigated buttons that look like links/CTAs but carry no crawlable href -- see
+   data-nav-href handling in page/layout/velo.html.twig. #}
 <article class="vw-news__card">
-    {% if addImage %}
+    {% if addImage and picture is defined %}
         <div class="vw-news__img">
-            {{ include('@Contao/image.html.twig') }}
+            <figure class="image_container{{ floatClass|default }}">
+                <button type="button" class="vw-news__img-btn" data-nav-href="{{ link }}" aria-label="Weiterlesen: {{ headline }}">
+                    {{ include('@Contao/picture_default.html.twig', picture, false) }}
+                </button>
+                {% if caption|default %}
+                    <figcaption class="caption">{{ caption|sanitize_html('contao')|insert_tag_raw }}</figcaption>
+                {% endif %}
+            </figure>
         </div>
     {% endif %}
     <div class="vw-news__body">
@@ -14,15 +24,25 @@
         </div>
         <a href="{{ link }}" class="vw-news__title">{{ headline }}</a>
         {% if teaser %}
-            <p class="vw-news__teaser">{{ teaser|striptags }}</p>
+            {# Card excerpt is one sentence, not the full teaser -- split on the first
+               sentence-ending period and re-append it (striptags leaves no space between
+               stripped </p><p> boundaries, so stopping at the first sentence also sidesteps
+               paragraphs running together here). CSS backs this up with a line-clamp in case a
+               "sentence" still turns out long. #}
+            {% set teaserText = (teaser|striptags|trim) %}
+            {% set firstSentence = teaserText|split('.')|first %}
+            <p class="vw-news__teaser">{{ firstSentence }}{{ firstSentence ? '.' : '' }}</p>
         {% endif %}
-        <a href="{{ link }}" class="vw-news__link">
+        <button type="button" class="vw-news__link" data-nav-href="{{ link }}">
             Weiterlesen
             <i data-lucide="arrow-right" width="14" height="14" aria-hidden="true"></i>
-        </a>
+        </button>
     </div>
 </article>
 
+{% if figure|default %}
+    {% do add_schema_org(figure.getSchemaOrgData()) %}
+{% endif %}
 {% if not hasReader %}
     {% do add_schema_org(getSchemaOrgData.invoke()) %}
 {% endif %}

@@ -24,6 +24,16 @@ $GLOBALS['TL_DCA']['tl_content']['palettes']['velo_lead'] =
     '{lead_legend},velo_eyebrow,velo_lead;'.
     '{invisible_legend:hide},invisible,start,stop';
 
+// velo_news_mode drives whether velo_news_item (which specific article) is shown at all --
+// "manual" needs it, "latest" resolves the article itself at render time, nothing to pick.
+$GLOBALS['TL_DCA']['tl_content']['palettes']['__selector__'][] = 'velo_news_mode';
+$GLOBALS['TL_DCA']['tl_content']['subpalettes']['velo_news_mode_manual'] = 'velo_news_item';
+
+$GLOBALS['TL_DCA']['tl_content']['palettes']['velo_news_showcase'] =
+    '{type_legend},type;'.
+    '{showcase_legend},velo_news_mode;'.
+    '{invisible_legend:hide},invisible,start,stop';
+
 $GLOBALS['TL_DCA']['tl_content']['palettes']['velo_steps'] =
     '{type_legend},type;'.
     '{section_legend},velo_section_eyebrow,velo_section_heading;'.
@@ -231,6 +241,64 @@ $GLOBALS['TL_DCA']['tl_content']['fields']['velo_melde_card'] = [
     ],
     'eval'      => ['mandatory' => true, 'tl_class' => 'w50'],
     'sql'       => "varchar(64) NOT NULL default ''",
+];
+
+// ============================================================
+// velo_news_showcase specific
+// ============================================================
+
+$GLOBALS['TL_DCA']['tl_content']['fields']['velo_news_mode'] = [
+    'label'     => ['Anzeige', 'Neuester Beitrag über alle Kategorien hinweg, oder ein bestimmter, manuell ausgewählter Beitrag'],
+    'inputType' => 'select',
+    'options'   => [
+        'latest' => 'Neuester Beitrag (automatisch, alle Kategorien)',
+        'manual' => 'Bestimmter Beitrag (manuell ausgewählt)',
+    ],
+    'eval'      => ['mandatory' => true, 'submitOnChange' => true, 'tl_class' => 'w50'],
+    'sql'       => "varchar(16) NOT NULL default 'latest'",
+];
+
+/* Options populated live from tl_news (id => "Archiv — Titel [Datum Zeit] (Status)") rather
+   than a hand-duplicated list -- same reasoning as velo_form_id below and velo_melde_card
+   above: the DB is the only source of truth, so a new/renamed/removed article is reflected here
+   automatically. The publish-status/"anzeigen ab|bis" suffix exists so picking an article that
+   won't actually be shown (see VeloNewsShowcaseController -- it falls back to the latest
+   published item instead of ever rendering a link to an unreadable "not found" page) is visible
+   right here in the dropdown, not a silent surprise discovered only on the live page. */
+$GLOBALS['TL_DCA']['tl_content']['fields']['velo_news_item'] = [
+    'label'     => ['Beitrag', 'Welcher News-Beitrag gezeigt werden soll'],
+    'inputType' => 'select',
+    'options_callback' => static function (): array {
+        $items = \Contao\NewsModel::findAll(['order' => 'date DESC']);
+        $opts  = [];
+        if ($items !== null) {
+            $now = time();
+            foreach ($items as $item) {
+                $archive = $item->getRelated('pid');
+                $label = ($archive ? $archive->title . ' — ' : '') . $item->headline;
+                $label .= ' [' . date('d.m.Y H:i', (int) $item->date) . ']';
+
+                $notes = [];
+                if (!$item->published) {
+                    $notes[] = 'nicht publiziert';
+                }
+                if ($item->start && (int) $item->start > $now) {
+                    $notes[] = 'anzeigen ab ' . date('d.m.Y', (int) $item->start);
+                }
+                if ($item->stop && (int) $item->stop < $now) {
+                    $notes[] = 'anzeigen bis ' . date('d.m.Y', (int) $item->stop);
+                }
+                if ($notes !== []) {
+                    $label .= ' (' . implode(', ', $notes) . ')';
+                }
+
+                $opts[(string) $item->id] = $label;
+            }
+        }
+        return $opts;
+    },
+    'eval'      => ['mandatory' => true, 'includeBlankOption' => true, 'chosen' => true, 'tl_class' => 'w50'],
+    'sql'       => "int(10) unsigned NOT NULL default 0",
 ];
 
 $GLOBALS['TL_DCA']['tl_content']['fields']['velo_form_id'] = [

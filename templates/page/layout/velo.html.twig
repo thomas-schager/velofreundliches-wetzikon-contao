@@ -66,6 +66,15 @@
         document.addEventListener('DOMContentLoaded', function () {
             if (typeof lucide !== 'undefined') { lucide.createIcons(); }
 
+            // News cards/showcase: the headline is the only native <a href> to an article
+            // (meaningful anchor text for crawlers); the image and "Weiterlesen" are <button>s
+            // that look like links/CTAs but carry no href of their own, navigated here via JS
+            // instead -- see data-nav-href in news_latest/news_short/velo_news_showcase.
+            document.addEventListener('click', function (e) {
+                var btn = e.target.closest('[data-nav-href]');
+                if (btn) { window.location.href = btn.dataset.navHref; }
+            });
+
             // Mobile nav toggle
             var burger = document.querySelector('.nav-burger');
             var nav    = document.querySelector('.navigation-main');

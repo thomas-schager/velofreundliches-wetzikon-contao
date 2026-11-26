@@ -1,0 +1,54 @@
+{# News reader "full" layout — project override of @ContaoNews/news_full.html.twig. Drops the
+   native "Unterüberschrift" (subheadline) entirely: it's no longer offered in the backend either
+   (see contao/dca/tl_news.php), so only the headline, <p class="info"> meta line, and the news
+   item's own content elements (or the linked article, for source != default) show up, same as
+   the vendor template otherwise. #}
+<div class="layout_full block{{ class }}">
+
+    <h1>{{ newsHeadline }}</h1>
+
+    {% block info %}
+        <p class="info"><time datetime="{{ datetime }}">{{ date }}</time> {{ author }}</p>
+    {% endblock %}
+
+    {% if hasText.invoke() %}
+        {{ text.invoke()|raw }}
+    {% else %}
+        <div class="ce_text content-text block">
+            {% if not addBefore %}
+                {{ teaser|default|sanitize_html('contao')|csp_inline_styles|insert_tag_raw }}
+            {% endif %}
+
+            {% if addImage %}
+                {{ include('@Contao/image.html.twig') }}
+            {% endif %}
+
+            {% if addBefore %}
+                {{ teaser|default|sanitize_html('contao')|csp_inline_styles|insert_tag_raw }}
+            {% endif %}
+        </div>
+    {% endif %}
+
+    {% if enclosure %}
+        <ul class="enclosure">
+            {% for enclosure in enclosure %}
+                <li class="download-element ext-{{ enclosure.extension }}">
+                    <a href="{{ enclosure.href }}" title="{{ enclosure.title }}">{{ enclosure.link }} <span class="size">({{ enclosure.filesize }})</span></a>
+                </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+</div>
+
+{% set schemaOrg = getSchemaOrgData.invoke() %}
+
+{% if hasText.invoke() %}
+    {% set schemaOrg = schemaOrg|merge({text: text.invoke()|html_to_plain_text}) %}
+{% endif %}
+
+{% do add_schema_org(schemaOrg) %}
+
+{% if figure|default %}
+    {% do add_schema_org({'@type': 'WebPage', primaryImageOfPage: figure.getSchemaOrgData()}) %}
+{% endif %}

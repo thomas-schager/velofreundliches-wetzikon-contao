@@ -203,7 +203,16 @@ h6 { font-weight: 500; font-size: var(--text-xs);  line-height: var(--lh-snug); 
 :where(.vw-prose-flow) h3:first-child,
 :where(.vw-prose-flow) h4:first-child,
 :where(.vw-prose-flow) h5:first-child,
-:where(.vw-prose-flow) h6:first-child { margin-top: 0; }
+:where(.vw-prose-flow) h6:first-child,
+/* News reader (news_full.html.twig): same bare-heading shape as .vw-prose-flow (no per-element
+   content-wrapper div around the <h1> to check for page-first position against), just one level
+   deeper -- .mod_article > .mod_newsreader > .layout_full > h1, not a direct child of
+   .mod_article. The two-level wrapper check above can never match it, same underlying gap as
+   the native "headline" element found on /news (2026-11-22) -- found here on an actual news
+   article detail page, 2026-11-26. Unconditional like .vw-prose-flow, not gated on the overall
+   page being article-first: a newsreader module is always the sole content of its (hidden)
+   detail page. */
+:where(.layout_full) h1:first-child { margin-top: 0; }
 
 /* Native "Überschrift" content element (type=headline) is structurally different from every
    other content element: Contao's own template has NO wrapper div for it at all (see
@@ -223,10 +232,17 @@ h6 { font-weight: 500; font-size: var(--text-xs);  line-height: var(--lh-snug); 
    5vw, --text-6xl), which exists only for .vw-hero__title (the one legitimately hero-sized h1 on
    the site). Without this exclusion-based override, any other native-headline h1 fell through to
    hero size (found on /tests/parkplaetze-und-abstellmoeglichkeiten, 2026-11-13). :not(.vw-hero__title)
-   is the exception valve for that and any future "h1 that should stay big" case. */
+   is the exception valve for that and any future "h1 that should stay big" case.
+   font-weight stays 700 (the bare h1 rule's own weight), not 600 like .vw-heading h1 -- this
+   selector also matches the news reader's bare article headline (news_full.html.twig has no
+   wrapper class on it either), which sits directly above a bare, equally-unstyled <h2>
+   (the subheadline). The bare global h2 rule (below) happens to use this exact same
+   font-size clamp, so at 600 weight the two were pixel-identical with nothing to tell them
+   apart (found on /news/.../artikel/..., 2026-11-25). Keeping the bold weight here is enough
+   to restore the hierarchy without growing past this tier's intentional size cap. */
 :where(.mod_article, .vw-prose-flow) h1:not(.vw-hero__title) {
   font-size: clamp(var(--text-3xl), 3.5vw, var(--text-4xl));
-  font-weight: 600;
+  font-weight: 700;
 }
 
 a {
