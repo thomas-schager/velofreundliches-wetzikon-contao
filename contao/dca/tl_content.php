@@ -9,7 +9,7 @@ declare(strict_types=1);
 $GLOBALS['TL_DCA']['tl_content']['palettes']['velo_hero'] =
     '{type_legend},type;'.
     '{hero_legend},velo_eyebrow,velo_hero_title,velo_lead;'.
-    '{buttons_legend},velo_btn_primary_label,velo_btn_primary_page,velo_btn_secondary_label,velo_btn_secondary_page;'.
+    '{buttons_legend},velo_btn_primary_label,velo_btn_primary_page;'.
     '{stats_legend},velo_stats;'.
     '{image_legend:hide},addImage;'.
     '{invisible_legend:hide},invisible,start,stop';
@@ -48,9 +48,10 @@ $GLOBALS['TL_DCA']['tl_content']['palettes']['velo_levels'] =
 
 // Prototyped in /tmp as "Variante A4" (velo-unterstuetzer-anmeldung-hell-v2.html) -- email +
 // Sicherheitsfrage signup form, frontend-only validation for now (see velo_signup.html.twig's
-// inline <script>), no backend/API call yet. velo_btn_secondary_label/_page (normally the
-// hero's "secondary button") double as the "Als Firma/Organisation anmelden" link here -- same
-// shape (label + page target), no need for a dedicated field pair.
+// inline <script>), no backend/API call yet. velo_btn_secondary_label/_page (shared with
+// velo_join's secondary button, formerly also velo_hero's -- removed there 2026-11-26) double
+// as the "Als Firma/Organisation anmelden" link here -- same shape (label + page target), no
+// need for a dedicated field pair.
 $GLOBALS['TL_DCA']['tl_content']['palettes']['velo_signup'] =
     '{type_legend},type;'.
     '{section_legend},velo_section_eyebrow,velo_section_heading,velo_section_lead;'.

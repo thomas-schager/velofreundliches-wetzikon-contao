@@ -11,6 +11,9 @@ use Contao\CoreBundle\Image\Studio\Studio;
 use Contao\CoreBundle\Routing\ContentUrlGenerator;
 use Contao\CoreBundle\Twig\FragmentTemplate;
 use Contao\FilesModel;
+use Contao\Image\PictureConfiguration;
+use Contao\Image\PictureConfigurationItem;
+use Contao\Image\ResizeConfiguration;
 use Contao\NewsArchiveModel;
 use Contao\NewsModel;
 use Symfony\Component\HttpFoundation\Request;
@@ -34,6 +37,32 @@ use Symfony\Component\Routing\Exception\ExceptionInterface;
 #[AsContentElement('velo_news_showcase', category: 'velo', template: 'content_element/velo_news_showcase')]
 class VeloNewsShowcaseController extends AbstractContentElementController
 {
+    /**
+     * Target size for the showcase image, run through Contao's resize/compression pipeline
+     * instead of serving the uploaded original as-is -- same AVIF/WebP approach as
+     * VeloHeroController::heroPictureConfig(), but "box" instead of "crop": the template deliberately
+     * keeps the image at its own natural aspect ratio (no forced 16:9 like the .vw-news__card
+     * grid), so resizing must only cap the dimensions, never crop them. 700px covers the
+     * element's own ~25%-of-content-width display box at roughly retina density on desktop,
+     * where the display box is widest.
+     */
+    private function showcasePictureConfig(): PictureConfiguration
+    {
+        return (new PictureConfiguration())
+            ->setSize(
+                (new PictureConfigurationItem())->setResizeConfig(
+                    (new ResizeConfiguration())
+                        ->setWidth(700)
+                        ->setHeight(700)
+                        ->setMode(ResizeConfiguration::MODE_BOX)
+                )
+            )
+            ->setFormats([
+                PictureConfiguration::FORMAT_DEFAULT => ['avif', 'webp', PictureConfiguration::FORMAT_DEFAULT],
+            ])
+        ;
+    }
+
     public static function getSubscribedServices(): array
     {
         $services = parent::getSubscribedServices();
@@ -130,15 +159,18 @@ class VeloNewsShowcaseController extends AbstractContentElementController
             if ($file !== null) {
                 $figure = $this->container->get(Studio::class)->createFigureBuilder()
                     ->fromFilesModel($file)
+                    ->setSize($this->showcasePictureConfig())
                     ->buildIfResourceExists()
                 ;
 
                 if ($figure !== null) {
                     $img = $figure->getImage()->getImg();
+                    $imgSources = $figure->getImage()->getSources();
                 }
             }
         }
         $template->set('img', $img);
+        $template->set('img_sources', $imgSources ?? []);
         $template->set('img_alt', $news->alt ?: '');
 
         return $template->getResponse();

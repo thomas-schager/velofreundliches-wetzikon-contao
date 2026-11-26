@@ -14,7 +14,14 @@
                    crawlable <a> to the article (see data-nav-href handling in
                    page/layout/velo.html.twig). #}
                 <button type="button" class="vw-news-showcase__img" data-nav-href="{{ link }}" aria-label="Weiterlesen: {{ headline }}">
-                    <img src="{{ img.src }}"{% if img.srcset %} srcset="{{ img.srcset }}"{% endif %} width="{{ img.width }}" height="{{ img.height }}" alt="{{ img_alt }}">
+                    {# <picture> with AVIF/WebP <source>s ahead of the <img> fallback -- see
+                       VeloNewsShowcaseController::showcasePictureConfig(). #}
+                    <picture>
+                        {% for source in img_sources %}
+                            <source srcset="{{ source.srcset }}"{% if source.type %} type="{{ source.type }}"{% endif %}>
+                        {% endfor %}
+                        <img src="{{ img.src }}"{% if img.srcset %} srcset="{{ img.srcset }}"{% endif %} width="{{ img.width }}" height="{{ img.height }}" alt="{{ img_alt }}">
+                    </picture>
                 </button>
             {% endif %}
             <div class="vw-news-showcase__body">

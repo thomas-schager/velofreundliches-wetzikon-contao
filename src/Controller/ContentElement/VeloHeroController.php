@@ -92,8 +92,6 @@ class VeloHeroController extends AbstractContentElementController
         $template->set('lead', $model->velo_lead);
         $template->set('btn_primary_label', $model->velo_btn_primary_label);
         $template->set('btn_primary_href', $this->resolvePageHref((int) $model->velo_btn_primary_page));
-        $template->set('btn_secondary_label', $model->velo_btn_secondary_label);
-        $template->set('btn_secondary_href', $this->resolvePageHref((int) $model->velo_btn_secondary_page));
 
         $rawStats = StringUtil::deserialize($model->velo_stats, true);
         $stats = [];
