@@ -1,0 +1,32 @@
+{# velo_404 content element — the content of the error_404 page (tl_page.id=12). Adapted from
+   the standalone mockup proposed at /tmp/velo-404-proposal.html: no "Fehler 404" eyebrow, no
+   secondary button, no quicklinks grid (trimmed down per feedback, 2026-11-27). Header/footer
+   are NOT part of this template -- this page has no layout override, so it inherits the same
+   page/layout/velo.html.twig (and so the same live nav/footer modules) as every other page. #}
+{% extends '@Contao/content_element/_base.html.twig' %}
+
+{% block content %}
+<section class="vw-404">
+    <div class="vw-container vw-404__inner">
+
+        <div class="vw-404__badge">
+            <i data-lucide="map-pin-off" aria-hidden="true"></i>
+        </div>
+
+        <p class="vw-404__code">404</p>
+
+        <h1 class="vw-404__title">Diese Seite gibt es nicht (mehr)</h1>
+        <p class="vw-lead vw-404__lead">
+            Vielleicht ist der Link veraltet oder die Seite wurde mit dem Cargobike wegtransportiert.
+        </p>
+
+        <div class="vw-404__btns">
+            <a href="/" class="vw-btn vw-btn--primary vw-btn--lg">
+                Zur Startseite
+                <i data-lucide="arrow-right" width="16" height="16" aria-hidden="true"></i>
+            </a>
+        </div>
+
+    </div>
+</section>
+{% endblock %}

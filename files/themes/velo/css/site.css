@@ -2057,3 +2057,43 @@
 .vw-signup__success-icon { width: 48px; height: 48px; color: var(--color-success-dark); margin-bottom: var(--space-3); }
 .vw-signup__success-title { font: 600 var(--text-xl) var(--font-display); margin: 0; }
 .vw-signup__success p { color: var(--color-text-muted); margin-top: var(--space-3); }
+
+/* ============================================================
+   404 PAGE (velo_404) -- the sole content of the error_404 page (tl_page.id=12). Ported from
+   the standalone mockup proposed at /tmp/velo-404-proposal.html, 2026-11-27.
+   ============================================================ */
+
+.vw-404 {
+  text-align: center;
+  padding-block: var(--space-7);
+}
+@media (min-width: 960px) { .vw-404 { padding-block: var(--space-9); } }
+/* First-element norm (see .vw-hero/.vw-melde/.vw-page-intro etc.): this is always the sole
+   element on the error_404 page, so .vw-main's own top padding already supplies the gap --
+   stacking this section's own padding-top on top of it would double it, same bug class as
+   every other "first element" case this norm covers. */
+.content-velo-404:first-child .vw-404 { padding-top: 0; }
+
+.vw-404__inner { max-width: 640px; margin-inline: auto; }
+
+.vw-404__badge {
+  width: 96px; height: 96px;
+  border-radius: var(--radius-full);
+  background: var(--color-primary-tint);
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto var(--space-6);
+}
+.vw-404__badge i { width: 44px; height: 44px; color: var(--color-primary); }
+
+.vw-404__code {
+  font: 700 clamp(56px, 10vw, 96px)/1 var(--font-display);
+  color: var(--color-primary);
+  letter-spacing: var(--tracking-tight);
+  margin: 0 0 var(--space-3);
+}
+
+.vw-404__title { margin: 0 0 var(--space-4); }
+
+.vw-404__lead { margin: 0 auto var(--space-7); max-width: 480px; }
+
+.vw-404__btns { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-3); }

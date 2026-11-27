@@ -21,6 +21,11 @@ $GLOBALS['TL_DCA']['tl_content']['fields']['size']['default'] = '3';
 // Palettes for custom Velo content elements
 // ============================================================
 
+// Fully static -- fixed copy, no backend fields at all (see Velo404Controller/velo_404.html.twig).
+$GLOBALS['TL_DCA']['tl_content']['palettes']['velo_404'] =
+    '{type_legend},type;'.
+    '{invisible_legend:hide},invisible,start,stop';
+
 $GLOBALS['TL_DCA']['tl_content']['palettes']['velo_hero'] =
     '{type_legend},type;'.
     '{hero_legend},velo_eyebrow,velo_hero_title,velo_lead;'.
