@@ -1,0 +1,121 @@
+{# Maintenance mode page — project override of @Contao/error/service_unavailable.html.twig
+   (replaces Contao's generic orange "</" fallback screen). Rendered once, at
+   `contao:maintenance-mode enable` time, into a static var/maintenance.html snapshot served
+   directly by public/index.php before Symfony even boots (see PrettyErrorScreenListener /
+   MaintenanceModeCommand) -- so this is a fully self-contained document, not extending the
+   normal page/layout.html.twig slot system (there's no Page/request context to drive it at
+   render time). No navigation on purpose: every other page is down too during maintenance, so
+   links elsewhere would just lead to more 503s. Asset paths are root-relative rather than via
+   the asset() helper, since this exact same markup must keep working as a static file long
+   after the Twig render that produced it. Originally proposed as a standalone mockup at
+   /tmp/velo-maintenance-proposal.html, 2026-11-27. #}
+<!doctype html>
+<html lang="de-CH">
+<head>
+<meta charset="UTF-8">
+<meta name="generator" content="Contao Open Source CMS">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,shrink-to-fit=no">
+<title>Wartungsarbeiten - Velofreundliches Wetzikon</title>
+<meta name="robots" content="noindex,nofollow">
+<link rel="stylesheet" href="/files/themes/velo/css/fonts.css">
+<link rel="stylesheet" href="/files/themes/velo/css/colors_and_type.css">
+<link rel="stylesheet" href="/files/themes/velo/css/site.css">
+<style>
+  /* Reuses the real site.css / colors_and_type.css tokens and .vw-btn/.vw-logo/.vw-eyebrow/
+     .vw-lead as-is; only this page-specific layout is defined here. */
+  html, body { height: 100%; }
+  body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+
+  .vw-maint-header {
+    padding: var(--space-5) var(--gutter);
+  }
+
+  .vw-maint-main {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-6) var(--gutter) var(--space-8);
+  }
+
+  .vw-maint-card {
+    max-width: 520px;
+    text-align: center;
+  }
+
+  .vw-maint-badge {
+    width: 96px; height: 96px;
+    border-radius: var(--radius-full);
+    background: var(--color-primary-tint);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto var(--space-6);
+  }
+  .vw-maint-badge i {
+    width: 44px; height: 44px; color: var(--color-primary);
+    animation: vw-maint-spin 3.5s linear infinite;
+  }
+  @keyframes vw-maint-spin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { .vw-maint-badge i { animation: none; } }
+
+  .vw-maint-eyebrow { display: flex; justify-content: center; }
+
+  .vw-maint-title { margin: var(--space-3) 0 var(--space-4); }
+
+  .vw-maint-lead { margin: 0 auto var(--space-6); max-width: 440px; }
+
+  .vw-maint-contact {
+    display: inline-flex; align-items: center; gap: var(--space-2);
+    font: 500 var(--text-base) var(--font-body);
+    color: var(--color-primary);
+    text-decoration: none;
+  }
+  .vw-maint-contact:hover { text-decoration: underline; }
+  .vw-maint-contact i { width: 18px; height: 18px; }
+</style>
+</head>
+
+<body id="top">
+
+<header class="vw-maint-header">
+    <a href="/" class="vw-logo" aria-label="Velofreundliches Wetzikon — Startseite" style="display:inline-flex;">
+        <span class="vw-logo__bar" aria-hidden="true"></span>
+        <span class="vw-logo__text">
+            <span class="vw-logo__top">velofreundliches</span>
+            <span class="vw-logo__bottom">WETZIKON</span>
+        </span>
+    </a>
+</header>
+
+<main class="vw-maint-main">
+    <div class="vw-maint-card">
+
+        <div class="vw-maint-badge">
+            <i data-lucide="rotate-ccw" aria-hidden="true"></i>
+        </div>
+
+        <span class="vw-eyebrow vw-maint-eyebrow">Wartungsarbeiten</span>
+        <h1 class="vw-maint-title">Wir sind gleich wieder für euch da</h1>
+        <p class="vw-lead vw-maint-lead">
+            Wir aktualisieren gerade die Website von velofreundliches Wetzikon. Das dauert in
+            der Regel nur wenige Minuten – schaut doch gleich nochmals vorbei.
+        </p>
+
+        <a href="mailto:feedback@velofreundliches-wetzikon.ch" class="vw-maint-contact">
+            <i data-lucide="mail" aria-hidden="true"></i>
+            feedback@velofreundliches-wetzikon.ch
+        </a>
+    </div>
+</main>
+
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        if (typeof lucide !== 'undefined') { lucide.createIcons(); }
+    });
+</script>
+</body>
+</html>
