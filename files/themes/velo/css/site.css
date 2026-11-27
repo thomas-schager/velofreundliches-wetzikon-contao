@@ -1986,6 +1986,16 @@
   }
 }
 
+/* Desktop: the same flat --space-5 (24px) gutter above reads tighter here than it did on
+   mobile -- the image now sits in a much wider text column, same reasoning .vw-parktest__grid
+   already scales its own column-gap for (32px -> 64px at 960px). One step up (not all the way
+   to --space-8 like that grid) is proportionate for a narrow inline float (max 360px) next to
+   running text, rather than two full-width columns (2026-11-27). */
+@media (min-width: 600px) {
+  .content-text.media--left figure { margin-right: var(--space-6); }
+  .content-text.media--right figure { margin-left: var(--space-6); }
+}
+
 /* ============================================================
    SIGNUP (velo_signup) -- Unterstützer-Anmeldung per E-Mail. Aufbau wie das dunkle
    Newsletter-/Join-Band (2-spaltiges Grid, Text+Icon links, Formular rechts), aber hell, auf
