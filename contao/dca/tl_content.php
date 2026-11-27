@@ -3,6 +3,21 @@
 declare(strict_types=1);
 
 // ============================================================
+// Native "Bild hinzufügen" (addImage) default image size
+// ============================================================
+
+// Shared across every native content element that offers image insertion (text, image,
+// accordionSingle, ...) -- editors leaving the size dropdown on "Automatisch"/blank previously
+// shipped the uploaded original untouched (found on an actual news article's inline image,
+// 2026-11-27: a plain <img> at its full 1280x720 upload size, no compression at all). Defaults
+// new rows to the project's own "Inhaltsbild (AVIF/WebP)" tl_image_size preset (downsized,
+// AVIF/WebP ahead of the original format) instead -- an editor can still pick a different size
+// or "Automatisch" deliberately, same as any other Contao default. Custom velo_* elements never
+// expose this field (each handles its own image sizing in PHP, e.g. VeloHeroController), so
+// this only ever reaches genuinely native usage.
+$GLOBALS['TL_DCA']['tl_content']['fields']['size']['default'] = '3';
+
+// ============================================================
 // Palettes for custom Velo content elements
 // ============================================================
 
